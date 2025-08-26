@@ -1,29 +1,81 @@
 // src/pages/Login.js
 import { Form, Input, Button, Typography, Card } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { ToastContainer, toast, Bounce } from "react-toastify";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
-export default function Login() {
+export default function Login(props) {
   const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
+  const history = useNavigate();
+  const { LoginValidation } = props;
 
-  const handleSubmit = (values) => {
+  const handleSubmit = async (values) => {
     console.log("Login data:", values);
     setLoading(true);
 
     // TODO: send data to backend API
     setTimeout(() => setLoading(false), 1000); // mock delay
+    const data = await fetch("/api/users/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(values),
+    });
+    const res = await data.json();
+    if (res.success) {
+      LoginValidation();
+      toast.success("Please wait...", {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
+      setTimeout(() => {
+        let arry = res.result.userEmail.tokens;
+        let lastElement = arry[arry.length - 1];
+        localStorage.setItem("accountUserToken", lastElement.token);
+        window.location.reload();
+        setTimeout(() => {
+          history("/home");
+        }, 1000);
+      }, 3000);
+    } else {
+      toast.error(res.body, {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
+    }
   };
 
   return (
     <div className="flex h-screen items-center justify-center bg-gray-100 px-4">
+      <ToastContainer />
       <Card className="w-full max-w-sm shadow-lg rounded-2xl">
-        <Title level={2} className="text-center mb-6">
-          EYEFIT
-        </Title>
+        <div className="text-center mb-6">
+          <img
+            src="/icon.png"
+            alt="icon_sidebar"
+            style={{ width: "200px", height: "200px", margin: "0 auto" }}
+          />
+        </div>
 
-        <Form layout="vertical" onFinish={handleSubmit}>
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
           {/* Email */}
           <Form.Item
             label="Email"

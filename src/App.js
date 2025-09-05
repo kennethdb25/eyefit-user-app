@@ -8,12 +8,13 @@ import HomePage from "./pages/HomePage";
 import { useContext, useEffect, useRef, useState } from "react";
 import { LoginContext } from "./context/LoginContext";
 import Navigation from "./pages/Navigation";
-// import Notifications from "./pages/Notifications";
+import Notifications from "./pages/Notifications";
 // import FaceScan from "./pages/FaceScan";
-// import Account from "./pages/Account";
+import Account from "./pages/Account";
 // import Settings from "./pages/Settings";
 import Cart from "./pages/Cart";
 // import PlaceOrder from "./pages/PlaceOrder";
+import BookAppointment from "./pages/BookAppointment"
 
 function App() {
   const history = useNavigate();
@@ -74,12 +75,12 @@ function App() {
 
   useEffect(() => {
     // appointmentDataFetch();
-    fetchData();
     setTimeout(() => {
       LoginValidation();
     }, 3000);
     setTimeout(() => {
       setData(true);
+      fetchData();
     }, 3000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -92,11 +93,12 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/home" element={<HomePage cartData={fetchData} />} />
             <Route path="/cart" element={<Cart cartItems={cartItems} setCartItems={setCartItems} cartData={fetchData} />} />
-            {/* <Route path="/notifications" element={<Notifications />} />
-            <Route path="/facescan" element={<FaceScan />} />
+            <Route path="/notifications" element={<Notifications />} />
+            {/* <Route path="/facescan" element={<FaceScan />} /> */}
             <Route path="/account" element={<Account />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/place-order" element={<PlaceOrder />} /> */}
+            {/* <Route path="/settings" element={<Settings />} /> */}
+            {/* <Route path="/place-order" element={<PlaceOrder />} /> */}
+            <Route path="/appointment" element={<BookAppointment />} />
           </Routes>
           {loginData ? (<Navigation cartItems={cartItems} fetchData={fetchData} />) : null}
         </div>

@@ -7,6 +7,8 @@ import { DeleteOutlined, LeftOutlined } from "@ant-design/icons";
 export default function CartPage(props) {
   const { cartItems, setCartItems, cartData } = props;
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [orderTotal, setOrderTotal] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState("otc"); // default value
 
   const { loginData, setLoginData } = useContext(LoginContext);
   const [messageApi, contextHolder] = message.useMessage();
@@ -23,6 +25,7 @@ export default function CartPage(props) {
       updatedCart[index].quantity += 1;
     }
     setCartItems(updatedCart);
+    checkTotal();
   };
 
   // Decrement
@@ -33,11 +36,30 @@ export default function CartPage(props) {
       updatedCart[index].quantity -= 1;
     }
     setCartItems(updatedCart);
+    checkTotal();
+  };
+
+  const handleRadioChange = (e) => {
+    console.log("Selected value:", e.target.value);
+    setPaymentMethod(e.target.value);
   };
 
   const handleCheckOut = () => {
+    checkTotal();
     showModal();
-    console.log(cartItems);
+  };
+
+  const handlePlaceOrder = () => {
+    const payload = {
+      userId: cartItems[0]?.user?._id || null, // Get userId from the first object
+      paymentMethod,
+      products: cartItems.map((item) => ({
+        productId: item.product._id,
+        quantity: item.quantity,
+      })),
+    };
+
+    console.log(payload);
   };
 
   const handleRemoveItem = async (checkoutId) => {
@@ -50,6 +72,7 @@ export default function CartPage(props) {
 
     const res = await data.json();
 
+    checkTotal();
     if (res.success) {
       messageApi.success("Item removed successfully!");
       cartData();
@@ -71,9 +94,24 @@ export default function CartPage(props) {
     if (res.success) {
       messageApi.success("All item(s) removed successfully!");
       cartData();
+      checkTotal();
     } else {
       messageApi.error(res?.error || "Something went wrong");
     }
+  };
+
+  const checkTotal = async () => {
+    const withTotals = cartItems.map((p) => ({
+      ...p,
+      totalPrice: p.quantity ? p?.product.price * p.quantity : p?.product.price,
+    }));
+
+    const grandTotal = withTotals.reduce(
+      (acc, item) => acc + item.totalPrice,
+      0
+    );
+
+    setOrderTotal(grandTotal);
   };
 
   return (
@@ -91,7 +129,10 @@ export default function CartPage(props) {
       <div className="flex-1 overflow-y-auto p-4">
         <div className="flex items-center justify-end">
           <div className="flex items-center gap-2">
-            <button className="bg-green-300 px-6 py-2 rounded-2xl shadow text-black mb-4">
+            <button
+              onClick={() => history("/appointment")}
+              className="bg-green-300 px-6 py-2 rounded-2xl shadow text-black mb-4"
+            >
               Book Appointment
             </button>
           </div>
@@ -121,34 +162,36 @@ export default function CartPage(props) {
         ) : (
           /* ---------- Cart Items ---------- */
           <>
-            <div className="bg-white p-4 rounded-xl shadow-sm">
-              <hr className="my-2" />
-              {cartItems.map((item, index) => (
-                <Card
-                  className="rounded-xl shadow mb-3"
-                  styles={{ padding: "12px" }}
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={item?.product?.productImgURL}
-                      alt={item?.product?.productName}
-                      className="w-20 h-20 object-contain"
-                    />
-                    <div className="flex-1">
-                      <div className="flex justify-between">
-                        <h3 className="font-semibold text-sm">
-                          {`${item?.product?.brand} - ${item?.product?.model}`}
-                        </h3>
-                        <Button
-                          onClick={() => handleRemoveItem(item?._id)}
-                          className="text-red-500 font-semibold p-0"
-                          icon={<DeleteOutlined />}
-                        ></Button>
-                      </div>
+            {/* <div className="bg-white p-4 rounded-xl shadow-sm"> */}
+            {/* <hr className="my-2" /> */}
+            {cartItems.map((item, index) => (
+              <Card
+                className="rounded-xl shadow mb-3"
+                bodyStyle={{ padding: "12px" }}
+              >
+                <div className="flex items-center gap-3">
+                  <img
+                    src={item?.product?.productImgURL}
+                    alt={item?.product?.productName}
+                    className="w-20 h-20 object-contain"
+                  />
+                  <div className="flex-1">
+                    <div className="flex justify-between">
+                      <h3 className="font-semibold text-sm">
+                        {`${item?.product?.brand} - ${item?.product?.model}`}
+                      </h3>
+                      <Button
+                        onClick={() => handleRemoveItem(item?._id)}
+                        className="text-red-500 font-semibold p-0"
+                        icon={<DeleteOutlined />}
+                      ></Button>
+                    </div>
+
+                    <div className="flex justify-between">
                       <p className="text-gray-700 text-sm">
                         ₱{item?.product?.price}.00
                       </p>
-                      <div className="flex items-center gap-2 mt-2">
+                      <div className="flex items-center gap-2 mt-10">
                         <button
                           onClick={() => handleDecrement(index)}
                           className="px-2 py-1 bg-gray-200 rounded-lg text-lg font-bold"
@@ -165,9 +208,10 @@ export default function CartPage(props) {
                       </div>
                     </div>
                   </div>
-                </Card>
-              ))}
-            </div>
+                </div>
+              </Card>
+            ))}
+            {/* </div> */}
 
             {/* Checkout + Trash */}
             <div className="flex justify-between items-center mt-4 mb-20">
@@ -205,7 +249,10 @@ export default function CartPage(props) {
               className="shadow"
               onClick={handleClose}
             />
-            <Button className="bg-green-200 rounded-xl px-4 py-1 font-semibold">
+            <Button
+              hidden
+              className="bg-green-200 rounded-xl px-4 py-1 font-semibold"
+            >
               Book Appointment
             </Button>
           </div>
@@ -228,35 +275,53 @@ export default function CartPage(props) {
           </Card>
 
           {/* Cart Item */}
-          <Card
-            className="rounded-xl shadow mb-3"
-            bodyStyle={{ padding: "12px" }}
-          >
-            <div className="flex items-center gap-3">
-              <img
-                src="https://cdn-icons-png.flaticon.com/512/4472/4472515.png"
-                alt="product"
-                className="w-20 h-20 object-contain"
-              />
-              <div className="flex-1">
-                <div className="flex justify-between">
-                  <h3 className="font-semibold text-sm">
-                    EO Eyewear Style New York
-                  </h3>
-                  <Button
-                    type="link"
-                    className="text-green-500 font-semibold p-0"
-                  >
-                    EDIT
-                  </Button>
+          {cartItems.map((item, index) => (
+            <Card
+              className="rounded-xl shadow mb-3"
+              bodyStyle={{ padding: "12px" }}
+            >
+              <div className="flex items-center gap-3">
+                <img
+                  src={item?.product?.productImgURL}
+                  alt={item?.product?.productName}
+                  className="w-20 h-20 object-contain"
+                />
+                <div className="flex-1">
+                  <div className="flex justify-between">
+                    <h3 className="font-semibold text-sm">
+                      {`${item?.product?.brand} - ${item?.product?.model}`}
+                    </h3>
+                    <Button
+                      onClick={() => handleRemoveItem(item?._id)}
+                      className="text-red-500 font-semibold p-0"
+                      icon={<DeleteOutlined />}
+                    ></Button>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <p className="text-gray-700 text-sm">
+                      ₱{item?.product?.price}.00
+                    </p>
+                    <div className="flex items-center gap-2 mt-10">
+                      <button
+                        onClick={() => handleDecrement(index)}
+                        className="px-2 py-1 bg-gray-200 rounded-lg text-lg font-bold"
+                      >
+                        −
+                      </button>
+                      <span className="px-3">{item.quantity || 1}</span>
+                      <button
+                        onClick={() => handleIncrement(index)}
+                        className="px-2 py-1 bg-gray-200 rounded-lg text-lg font-bold"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-gray-700 text-sm">
-                  ₱1,279.2{" "}
-                  <span className="line-through text-gray-400">₱1,599.00</span>
-                </p>
               </div>
-            </div>
-          </Card>
+            </Card>
+          ))}
 
           {/* Payment Method */}
           <div className="mb-4">
@@ -264,20 +329,31 @@ export default function CartPage(props) {
               PAYMENT METHOD
             </h4>
             <Card className="rounded-xl shadow" bodyStyle={{ padding: "12px" }}>
-              <Radio.Group defaultValue="otc" className="w-full">
+              <Radio.Group
+                value={paymentMethod}
+                onChange={handleRadioChange}
+                className="flex flex-col w-full"
+              >
                 <Radio value="otc">Over the counter</Radio>
+                <Radio value="cod">Cash on Delivery</Radio>
               </Radio.Group>
             </Card>
           </div>
 
           {/* Footer Checkout */}
           <div className="mt-auto bg-green-200 p-4 flex justify-between items-center rounded-2xl shadow">
-            <span className="font-semibold text-lg">Total:</span>
+            <span className="font-semibold text-sm">
+              Total: ₱{cartItems.length > 0 ? orderTotal : "0"}.00
+            </span>
             <div className="flex items-center gap-3">
-              <Button className="bg-green-400 text-white rounded-xl px-6 py-2 shadow">
-                Place order
+              <Button
+                onClick={() => handlePlaceOrder()}
+                className="bg-green-400 text-white rounded-xl px-6 py-2 shadow"
+              >
+                ORDER
               </Button>
               <Button
+                onClick={() => handleRemoveAllItem()}
                 shape="circle"
                 icon={<DeleteOutlined />}
                 className="bg-green-300 shadow"

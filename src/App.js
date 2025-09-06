@@ -75,12 +75,12 @@ function App() {
 
   useEffect(() => {
     // appointmentDataFetch();
+    LoginValidation();
     setTimeout(() => {
-      LoginValidation();
+      fetchData();
     }, 3000);
     setTimeout(() => {
       setData(true);
-      fetchData();
     }, 3000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

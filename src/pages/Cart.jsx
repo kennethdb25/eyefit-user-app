@@ -166,6 +166,7 @@ export default function CartPage(props) {
             {/* <hr className="my-2" /> */}
             {cartItems.map((item, index) => (
               <Card
+                key={index}
                 className="rounded-xl shadow mb-3"
                 bodyStyle={{ padding: "12px" }}
               >

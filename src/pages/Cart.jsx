@@ -64,7 +64,7 @@ export default function CartPage(props) {
 
   const handleRemoveItem = async (checkoutId) => {
     const data = await fetch(
-      `/api/user/remove/checkout?checkoutId=${checkoutId}`,
+      `https://eyefit-shop-800355ab3f46.herokuapp.com:5000/api/user/remove/checkout?checkoutId=${checkoutId}`,
       {
         method: "DELETE",
       }
@@ -83,7 +83,7 @@ export default function CartPage(props) {
 
   const handleRemoveAllItem = async () => {
     const data = await fetch(
-      `/api/user/remove/all/checkout?userId=${loginData?.body?._id}`,
+      `https://eyefit-shop-800355ab3f46.herokuapp.com:5000/api/user/remove/all/checkout?userId=${loginData?.body?._id}`,
       {
         method: "DELETE",
       }

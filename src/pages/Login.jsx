@@ -18,13 +18,16 @@ export default function Login(props) {
 
     // TODO: send data to backend API
     setTimeout(() => setLoading(false), 1000); // mock delay
-    const data = await fetch("/api/users/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(values),
-    });
+    const data = await fetch(
+      "https://eyefit-shop-800355ab3f46.herokuapp.com:5000/api/users/login",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      }
+    );
     const res = await data.json();
     if (res.success) {
       LoginValidation();

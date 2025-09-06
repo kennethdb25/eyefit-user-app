@@ -19,7 +19,7 @@ export default function Register() {
     setLoading(true);
 
     const response = await fetch(
-      "https://eyefit-shop-800355ab3f46.herokuapp.com:5000/api/users",
+      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users",
       {
         method: "POST",
         headers: {

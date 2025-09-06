@@ -18,7 +18,7 @@ export default function HomePage(props) {
   const fetchData = async () => {
     try {
       const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com:5000/api/user/product`
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/product`
       );
       const json = await res.json();
       setData(json.body || []); // assuming your API responds with { body: [...] }
@@ -34,7 +34,7 @@ export default function HomePage(props) {
     };
 
     const response = await fetch(
-      "https://eyefit-shop-800355ab3f46.herokuapp.com:5000/api/user/checkout",
+      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/checkout",
       {
         method: "POST",
         headers: {

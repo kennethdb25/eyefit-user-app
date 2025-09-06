@@ -106,7 +106,7 @@ export default function Login(props) {
               loading={loading}
               className="bg-green-700 hover:bg-green-800"
             >
-              Sign insss
+              Sign in
             </Button>
           </Form.Item>
         </Form>

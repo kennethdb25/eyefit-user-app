@@ -40,6 +40,7 @@ function App() {
   const LoginValidation = async () => {
     if (localStorage.getItem("accountUserToken")) {
       let validToken = localStorage.getItem("accountUserToken");
+      // https://eyefit-shop-800355ab3f46.herokuapp.com
       const data = await fetch("https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/validate", {
         method: "GET",
         headers: {
@@ -64,6 +65,7 @@ function App() {
   const fetchData = async () => {
     try {
       const res = await fetch(
+        // https://eyefit-shop-800355ab3f46.herokuapp.com
         `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/get-checkout?userId=${loginData?.body?._id}`
       );
       const json = await res.json();

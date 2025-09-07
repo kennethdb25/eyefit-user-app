@@ -17,7 +17,7 @@ export default function Register() {
       return alert("Passwords do not match!");
     }
     setLoading(true);
-
+    // https://eyefit-shop-800355ab3f46.herokuapp.com
     const response = await fetch(
       "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users",
       {

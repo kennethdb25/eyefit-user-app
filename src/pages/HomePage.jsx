@@ -13,10 +13,12 @@ export default function HomePage(props) {
   const { loginData, setLoginData } = useContext(LoginContext);
   const [messageApi, contextHolder] = message.useMessage();
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
   const { cartData } = props;
 
   const fetchData = async () => {
     try {
+      // https://eyefit-shop-800355ab3f46.herokuapp.com
       const res = await fetch(
         `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/product`
       );
@@ -27,12 +29,70 @@ export default function HomePage(props) {
     }
   };
 
-  const onHandleAddToCart = async (productId) => {
+  const onHandLikeProduct = async (productId) => {
     const payload = {
-      userId: loginData?.body._id,
+      userId: loginData?.body?._id,
       productId,
     };
 
+    // https://eyefit-shop-800355ab3f46.herokuapp.com
+    const response = await fetch(
+      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/like",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+    const res = await response.json();
+
+    if (res.success) {
+      messageApi.success("Like <3!");
+      cartData();
+    } else {
+      messageApi.error(res?.error || "Something went wrong");
+    }
+  };
+
+  const onHandleRecentlyView = async (productId) => {
+    const payload = {
+      userId: loginData?.body?._id,
+      productId,
+    };
+
+    // https://eyefit-shop-800355ab3f46.herokuapp.com
+    const response = await fetch(
+      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/view",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+    const res = await response.json();
+
+    if (res.success) {
+      cartData();
+    } else {
+      messageApi.error(res?.error || "Something went wrong");
+    }
+  };
+
+  const onHandleAddToCart = async (productId) => {
+    const payload = {
+      userId: loginData?.body?._id,
+      productId,
+      color: selectedColor,
+    };
+
+    if (selectedColor === null) {
+      return messageApi.info("Please select a color!");
+    }
+    // https://eyefit-shop-800355ab3f46.herokuapp.com
     const response = await fetch(
       "https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/checkout",
       {
@@ -112,7 +172,10 @@ export default function HomePage(props) {
                 {/* Image + details */}
                 <div
                   className="flex gap-4 justify-around"
-                  onClick={() => setSelectedProduct(product)}
+                  onClick={() => {
+                    setSelectedProduct(product);
+                    onHandleRecentlyView(product._id);
+                  }}
                 >
                   <img
                     src={product.productImgURL || "/glasses.png"}
@@ -144,7 +207,10 @@ export default function HomePage(props) {
                     Try
                   </button>
                   <button
-                    onClick={() => setSelectedProduct(product)}
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      onHandleRecentlyView(product._id);
+                    }}
                     disabled={product?.stocks === 0}
                     className={`flex-1 py-2 rounded-lg shadow flex items-center justify-center text-sm ${
                       product?.stocks > 0
@@ -154,7 +220,10 @@ export default function HomePage(props) {
                   >
                     <ShoppingCartOutlined />
                   </button>
-                  <button className="flex-1 bg-pink-500 hover:bg-pink-600 text-white py-2 rounded-lg shadow flex items-center justify-center">
+                  <button
+                    onClick={() => onHandLikeProduct(product?._id)}
+                    className="flex-1 bg-pink-500 hover:bg-pink-600 text-white py-2 rounded-lg shadow flex items-center justify-center"
+                  >
                     <HeartOutlined />
                   </button>
                 </div>
@@ -301,9 +370,14 @@ export default function HomePage(props) {
                       {selectedProduct?.colors?.map((color) => (
                         <div
                           key={color}
-                          className="w-8 h-8 rounded-full border-2 border-gray-300"
+                          className={`w-8 h-8 rounded-full border-2 cursor-pointer ${
+                            selectedColor === color
+                              ? "border-green-500 scale-110"
+                              : "border-gray-300"
+                          } transition-transform duration-200`}
                           style={{ backgroundColor: color }}
-                        ></div>
+                          onClick={() => setSelectedColor(color)}
+                        />
                       ))}
                     </>
                   ) : (

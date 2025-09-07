@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LoginContext } from "../context/LoginContext";
-import { Button, Input, Card, Radio, Modal, message } from "antd";
+import { Button, Input, Card, Radio, Modal, message, Tooltip } from "antd";
 import { DeleteOutlined, LeftOutlined } from "@ant-design/icons";
 
 export default function CartPage(props) {
@@ -49,21 +49,45 @@ export default function CartPage(props) {
     showModal();
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     const payload = {
       userId: cartItems[0]?.user?._id || null, // Get userId from the first object
       paymentMethod,
       products: cartItems.map((item) => ({
         productId: item.product._id,
-        quantity: item.quantity,
+        quantity: parseInt(item.quantity) || 1,
+        color: item.color,
       })),
     };
 
-    console.log(payload);
+    if (!payload || cartItems.length === 0) {
+      return messageApi.info("No order in Cart");
+    }
+    // https://eyefit-shop-800355ab3f46.herokuapp.com
+    const response = await fetch(
+      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/orders",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+    const res = await response.json();
+
+    if (res.success) {
+      messageApi.success("Order Placed Successfully!");
+      cartData();
+      handleRemoveAllItem(false);
+    } else {
+      messageApi.error(res?.error || "Something went wrong");
+    }
   };
 
   const handleRemoveItem = async (checkoutId) => {
     const data = await fetch(
+      // https://eyefit-shop-800355ab3f46.herokuapp.com
       `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/remove/checkout?checkoutId=${checkoutId}`,
       {
         method: "DELETE",
@@ -81,8 +105,9 @@ export default function CartPage(props) {
     }
   };
 
-  const handleRemoveAllItem = async () => {
+  const handleRemoveAllItem = async (toShow) => {
     const data = await fetch(
+      // https://eyefit-shop-800355ab3f46.herokuapp.com
       `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/remove/all/checkout?userId=${loginData?.body?._id}`,
       {
         method: "DELETE",
@@ -92,7 +117,9 @@ export default function CartPage(props) {
     const res = await data.json();
 
     if (res.success) {
-      messageApi.success("All item(s) removed successfully!");
+      if (toShow) {
+        messageApi.success("All item(s) removed successfully!");
+      }
       cartData();
       checkTotal();
     } else {
@@ -167,42 +194,64 @@ export default function CartPage(props) {
             {cartItems.map((item, index) => (
               <Card
                 key={index}
-                className="rounded-xl shadow mb-3"
-                bodyStyle={{ padding: "12px" }}
+                className="rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 mb-4 border border-gray-100"
+                bodyStyle={{ padding: "16px" }}
               >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={item?.product?.productImgURL}
-                    alt={item?.product?.productName}
-                    className="w-20 h-20 object-contain"
-                  />
-                  <div className="flex-1">
-                    <div className="flex justify-between">
-                      <h3 className="font-semibold text-sm">
+                <div className="flex items-center gap-4">
+                  {/* Product Image */}
+                  <div className="flex-shrink-0">
+                    <img
+                      src={item?.product?.productImgURL || "/placeholder.png"}
+                      alt={item?.product?.productName}
+                      className="w-20 h-20 object-contain rounded-lg bg-gray-50 border"
+                    />
+                  </div>
+
+                  {/* Product Details */}
+                  <div className="flex-1 flex flex-col justify-between">
+                    {/* Title & Delete */}
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-semibold text-gray-800 text-sm leading-snug">
                         {`${item?.product?.brand} - ${item?.product?.model}`}
                       </h3>
-                      <Button
-                        onClick={() => handleRemoveItem(item?._id)}
-                        className="text-red-500 font-semibold p-0"
-                        icon={<DeleteOutlined />}
-                      ></Button>
+                      <Tooltip title="Remove item">
+                        <Button
+                          onClick={() => handleRemoveItem(item?._id)}
+                          type="text"
+                          size="small"
+                          icon={<DeleteOutlined className="text-red-500" />}
+                        />
+                      </Tooltip>
                     </div>
 
-                    <div className="flex justify-between">
-                      <p className="text-gray-700 text-sm">
+                    {/* Price, Color & Quantity */}
+                    <div className="flex justify-between items-center mt-3">
+                      {/* Price */}
+                      <p className="text-green-600 font-semibold text-sm">
                         ₱{item?.product?.price}.00
                       </p>
-                      <div className="flex items-center gap-2 mt-10">
+
+                      {/* Color Swatch */}
+                      <div
+                        key={item?.color}
+                        className="w-6 h-6 rounded-full border border-gray-300"
+                        style={{ backgroundColor: item?.color }}
+                      />
+
+                      {/* Quantity Controls */}
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleDecrement(index)}
-                          className="px-2 py-1 bg-gray-200 rounded-lg text-lg font-bold"
+                          className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-lg font-bold transition"
                         >
                           −
                         </button>
-                        <span className="px-3">{item.quantity || 1}</span>
+                        <span className="px-3 text-gray-800 font-medium">
+                          {item.quantity || 1}
+                        </span>
                         <button
                           onClick={() => handleIncrement(index)}
-                          className="px-2 py-1 bg-gray-200 rounded-lg text-lg font-bold"
+                          className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-lg font-bold transition"
                         >
                           +
                         </button>
@@ -223,7 +272,7 @@ export default function CartPage(props) {
                 CHECK OUT
               </button>
               <button
-                onClick={() => handleRemoveAllItem()}
+                onClick={() => handleRemoveAllItem(true)}
                 className="bg-green-300 p-2 rounded-2xl shadow"
               >
                 REMOVE ALL
@@ -278,42 +327,65 @@ export default function CartPage(props) {
           {/* Cart Item */}
           {cartItems.map((item, index) => (
             <Card
-              className="rounded-xl shadow mb-3"
-              bodyStyle={{ padding: "12px" }}
+              key={index}
+              className="rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 mb-4 border border-gray-100"
+              bodyStyle={{ padding: "16px" }}
             >
-              <div className="flex items-center gap-3">
-                <img
-                  src={item?.product?.productImgURL}
-                  alt={item?.product?.productName}
-                  className="w-20 h-20 object-contain"
-                />
-                <div className="flex-1">
-                  <div className="flex justify-between">
-                    <h3 className="font-semibold text-sm">
+              <div className="flex items-center gap-4">
+                {/* Product Image */}
+                <div className="flex-shrink-0">
+                  <img
+                    src={item?.product?.productImgURL || "/placeholder.png"}
+                    alt={item?.product?.productName}
+                    className="w-20 h-20 object-contain rounded-lg bg-gray-50 border"
+                  />
+                </div>
+
+                {/* Product Details */}
+                <div className="flex-1 flex flex-col justify-between">
+                  {/* Title & Delete */}
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-semibold text-gray-800 text-sm leading-snug">
                       {`${item?.product?.brand} - ${item?.product?.model}`}
                     </h3>
-                    <Button
-                      onClick={() => handleRemoveItem(item?._id)}
-                      className="text-red-500 font-semibold p-0"
-                      icon={<DeleteOutlined />}
-                    ></Button>
+                    <Tooltip title="Remove item">
+                      <Button
+                        onClick={() => handleRemoveItem(item?._id)}
+                        type="text"
+                        size="small"
+                        icon={<DeleteOutlined className="text-red-500" />}
+                      />
+                    </Tooltip>
                   </div>
 
-                  <div className="flex justify-between">
-                    <p className="text-gray-700 text-sm">
+                  {/* Price, Color & Quantity */}
+                  <div className="flex justify-between items-center mt-3">
+                    {/* Price */}
+                    <p className="text-green-600 font-semibold text-sm">
                       ₱{item?.product?.price}.00
                     </p>
-                    <div className="flex items-center gap-2 mt-10">
+
+                    {/* Color Swatch */}
+                    <div
+                      key={item?.color}
+                      className="w-6 h-6 rounded-full border border-gray-300"
+                      style={{ backgroundColor: item?.color }}
+                    />
+
+                    {/* Quantity Controls */}
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleDecrement(index)}
-                        className="px-2 py-1 bg-gray-200 rounded-lg text-lg font-bold"
+                        className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-lg font-bold transition"
                       >
                         −
                       </button>
-                      <span className="px-3">{item.quantity || 1}</span>
+                      <span className="px-3 text-gray-800 font-medium">
+                        {item.quantity || 1}
+                      </span>
                       <button
                         onClick={() => handleIncrement(index)}
-                        className="px-2 py-1 bg-gray-200 rounded-lg text-lg font-bold"
+                        className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-lg font-bold transition"
                       >
                         +
                       </button>
@@ -354,7 +426,7 @@ export default function CartPage(props) {
                 ORDER
               </Button>
               <Button
-                onClick={() => handleRemoveAllItem()}
+                onClick={() => handleRemoveAllItem(true)}
                 shape="circle"
                 icon={<DeleteOutlined />}
                 className="bg-green-300 shadow"

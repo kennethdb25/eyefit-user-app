@@ -32,7 +32,7 @@ const NoInternetWrapper = ({ children }) => {
                 }}
             >
                 <img
-                    src="\no-internet.jpg" // Optional: put an image in your public folder
+                    src="https://cdn-icons-png.flaticon.com/512/2748/2748558.png" // Optional: put an image in your public folder
                     alt="No Internet"
                     style={{ width: "150px", marginBottom: "20px" }}
                 />

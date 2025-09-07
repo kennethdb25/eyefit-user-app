@@ -24,12 +24,6 @@ const NoInternetWrapper = ({ children }) => {
                 <p className="text-gray-600 mb-6 text-center">
                     Please check your network and try again.
                 </p>
-                <button
-                    onClick={() => window.location.reload()}
-                    className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
-                >
-                    Retry
-                </button>
             </div>
         );
     }

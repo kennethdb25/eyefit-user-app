@@ -18,26 +18,18 @@ const NoInternetWrapper = ({ children }) => {
 
     if (!isOnline) {
         return (
-            <div
-                style={{
-                    height: "100vh",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    background: "#f8f9fa",
-                    color: "#333",
-                    textAlign: "center",
-                    padding: "20px",
-                }}
-            >
-                <img
-                    src="https://cdn-icons-png.flaticon.com/512/2748/2748558.png" // Optional: put an image in your public folder
-                    alt="No Internet"
-                    style={{ width: "150px", marginBottom: "20px" }}
-                />
-                <h2>No Internet Connection</h2>
-                <p>Please check your network and try again.</p>
+            <div className="h-screen flex flex-col justify-center items-center bg-gray-100 text-gray-800 p-6">
+                <div className="text-6xl mb-4">📡</div>
+                <h2 className="text-2xl font-semibold mb-2">No Internet Connection</h2>
+                <p className="text-gray-600 mb-6 text-center">
+                    Please check your network and try again.
+                </p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="px-5 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
+                >
+                    Retry
+                </button>
             </div>
         );
     }

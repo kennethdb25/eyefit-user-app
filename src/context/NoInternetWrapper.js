@@ -32,7 +32,7 @@ const NoInternetWrapper = ({ children }) => {
                 }}
             >
                 <img
-                    src="public\no-internet.jpg" // Optional: put an image in your public folder
+                    src="\no-internet.jpg" // Optional: put an image in your public folder
                     alt="No Internet"
                     style={{ width: "150px", marginBottom: "20px" }}
                 />

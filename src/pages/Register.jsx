@@ -30,8 +30,6 @@ export default function Register() {
     );
     const res = await response.json();
 
-    console.log("Response JSON:", res);
-
     if (res.success) {
       messageApi.success("Account Created Successfully! Go to Login Page");
       form.resetFields();

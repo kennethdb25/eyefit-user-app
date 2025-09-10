@@ -59,7 +59,6 @@ const Notifications = () => {
 
   useEffect(() => {
     fetchData();
-    console.log(notifications);
   }, []);
 
   return (

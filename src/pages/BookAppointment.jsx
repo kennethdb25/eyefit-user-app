@@ -194,7 +194,7 @@ export default function BookAppointment() {
           <Button
             type="text"
             icon={<LeftOutlined />}
-            onClick={() => history("/cart")}
+            onClick={() => history("/home")}
           />
           <Title level={4} className="m-0 mx-auto">
             Book Appointment

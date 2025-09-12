@@ -5,9 +5,11 @@ import {
   HeartOutlined,
   LeftOutlined,
   RightOutlined,
+  ScheduleOutlined,
 } from "@ant-design/icons";
 import { useContext, useEffect, useState, useRef } from "react";
 import { LoginContext } from "../context/LoginContext";
+import { useNavigate } from "react-router-dom";
 
 export default function HomePage(props) {
   const [data, setData] = useState([]);
@@ -21,6 +23,7 @@ export default function HomePage(props) {
   const [initiateSearch, setInitiateSearch] = useState(false);
   const carouselRef = useRef(null);
   const containerRef = useRef(null);
+  const history = useNavigate();
   const { cartData } = props;
 
   const fetchData = async () => {
@@ -170,28 +173,33 @@ export default function HomePage(props) {
           alt="EYEFIT logo"
           className="w-28 md:w-36 h-auto mb-4"
         />
-        <div className="w-full max-w-lg px-4" ref={containerRef}>
+        <div className="flex items-center justify-between w-full max-w-2xl gap-3 px-4">
+          {/* Book Appointment Button */}
+          <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
+            <ScheduleOutlined className="text-lg mr-1" />
+            SET AN APPOINTMENT
+          </button>
+
+          {/* Search Icon/Input */}
+          <div ref={containerRef} className="flex-1">
           {!showInput ? (
-            <>
               <button
                 onClick={() => setShowInput(true)}
-                className="p-2 rounded-full shadow hover:bg-gray-100 transition"
+                className="p-2 rounded-full shadow hover:bg-gray-100 transition w-10 h-10 flex items-center justify-center"
               >
                 <SearchOutlined style={{ fontSize: "20px" }} />
               </button>
-            </>
           ) : (
-            <>
           <Input
             size="large"
             placeholder="Search..."
             prefix={<SearchOutlined style={{ fontSize: "18px" }} />}
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)} // just update state
-            className="rounded-xl shadow-sm"
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="rounded-xl shadow-sm transition-all"
           />
-            </>
           )}
+          </div>
         </div>
       </div>
 
@@ -206,7 +214,7 @@ export default function HomePage(props) {
               {/* Left Arrow */}
               <button
                 onClick={() => carouselRef.current.prev()}
-                className="absolute top-1/2 -translate-y-1/2 left-0 z-10 bg-white shadow p-2 rounded-full hover:bg-gray-100"
+                className="absolute top-1/2 -translate-y-1/2 left-2 z-10 p-2 rounded-full text-gray-700 bg-transparent hover:bg-black/10 transition"
               >
                 <LeftOutlined />
               </button>
@@ -305,7 +313,7 @@ export default function HomePage(props) {
               {/* Right Arrow */}
               <button
                 onClick={() => carouselRef.current.next()}
-                className="absolute top-1/2 -translate-y-1/2 right-0 z-10 bg-white shadow p-2 rounded-full hover:bg-gray-100"
+                className="absolute top-1/2 -translate-y-1/2 right-2 z-10 p-2 rounded-full text-gray-700 bg-transparent hover:bg-black/10 transition"
               >
                 <RightOutlined />
               </button>
@@ -527,7 +535,7 @@ export default function HomePage(props) {
               onClick={() => onHandleAddToCart(selectedProduct._id)}
               className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold text-lg shadow-md"
             >
-              <ShoppingCartOutlined className="mr-2" /> Checkout
+              <ShoppingCartOutlined className="mr-2" /> ADD TO CART
             </button>
           </div>
         </div>

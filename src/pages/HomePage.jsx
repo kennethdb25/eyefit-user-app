@@ -3,13 +3,15 @@ import {
   SearchOutlined,
   ShoppingCartOutlined,
   HeartOutlined,
-  StarFilled,
+  LeftOutlined,
+  RightOutlined,
 } from "@ant-design/icons";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import { LoginContext } from "../context/LoginContext";
 
 export default function HomePage(props) {
   const [data, setData] = useState([]);
+  const [showInput, setShowInput] = useState(false);
   const { loginData, setLoginData } = useContext(LoginContext);
   const [messageApi, contextHolder] = message.useMessage();
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -17,6 +19,8 @@ export default function HomePage(props) {
   const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState([]);
   const [initiateSearch, setInitiateSearch] = useState(false);
+  const carouselRef = useRef(null);
+  const containerRef = useRef(null);
   const { cartData } = props;
 
   const fetchData = async () => {
@@ -140,6 +144,19 @@ export default function HomePage(props) {
 
   useEffect(() => {
     fetchData();
+
+    function handleClickOutside(event) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target)
+      ) {
+        setShowInput(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   return (
@@ -153,7 +170,18 @@ export default function HomePage(props) {
           alt="EYEFIT logo"
           className="w-28 md:w-36 h-auto mb-4"
         />
-        <div className="w-full max-w-lg px-4">
+        <div className="w-full max-w-lg px-4" ref={containerRef}>
+          {!showInput ? (
+            <>
+              <button
+                onClick={() => setShowInput(true)}
+                className="p-2 rounded-full shadow hover:bg-gray-100 transition"
+              >
+                <SearchOutlined style={{ fontSize: "20px" }} />
+              </button>
+            </>
+          ) : (
+            <>
           <Input
             size="large"
             placeholder="Search..."
@@ -162,6 +190,8 @@ export default function HomePage(props) {
             onChange={(e) => setSearchTerm(e.target.value)} // just update state
             className="rounded-xl shadow-sm"
           />
+            </>
+          )}
         </div>
       </div>
 
@@ -172,19 +202,29 @@ export default function HomePage(props) {
             <h2 className="text-lg md:text-2xl font-bold mb-4">
               🌟 Featured Products
             </h2>
+            <div className="relative">
+              {/* Left Arrow */}
+              <button
+                onClick={() => carouselRef.current.prev()}
+                className="absolute top-1/2 -translate-y-1/2 left-0 z-10 bg-white shadow p-2 rounded-full hover:bg-gray-100"
+              >
+                <LeftOutlined />
+              </button>
+
             <Carousel
+                ref={carouselRef}
               dots={false}
-              slidesToShow={1} // Default: always 1 slide first
+                slidesToShow={1}
               slidesToScroll={1}
               responsive={[
                 {
-                  breakpoint: 1024, // Tablet & small laptops
+                    breakpoint: 1024,
                   settings: {
                     slidesToShow: 1,
                   },
                 },
                 {
-                  breakpoint: 1280, // Larger screens
+                    breakpoint: 1280,
                   settings: {
                     slidesToShow: 4,
                   },
@@ -200,7 +240,7 @@ export default function HomePage(props) {
                   >
                     {/* Image + details */}
                     <div
-                      className="flex gap-4 justify-around"
+                        className="flex gap-4 justify-around cursor-pointer"
                       onClick={() => {
                         setSelectedProduct(product);
                         onHandleRecentlyView(product._id);
@@ -261,6 +301,15 @@ export default function HomePage(props) {
                   </div>
                 ))}
             </Carousel>
+
+              {/* Right Arrow */}
+              <button
+                onClick={() => carouselRef.current.next()}
+                className="absolute top-1/2 -translate-y-1/2 right-0 z-10 bg-white shadow p-2 rounded-full hover:bg-gray-100"
+              >
+                <RightOutlined />
+              </button>
+            </div>
           </section>
 
           {/* All Products */}

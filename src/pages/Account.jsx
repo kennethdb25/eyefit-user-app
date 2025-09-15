@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   SettingOutlined,
   UserOutlined,
@@ -16,8 +17,9 @@ import {
   LeftOutlined,
   CameraOutlined,
 } from "@ant-design/icons";
-import { Modal } from "antd";
+import { Modal, message, Button, Popconfirm } from "antd";
 import { LoginContext } from "../context/LoginContext";
+import { ToastContainer, toast, Bounce } from "react-toastify";
 
 const AccountInformationModal = ({ open, onClose, user }) => {
   return (
@@ -45,7 +47,7 @@ const AccountInformationModal = ({ open, onClose, user }) => {
           <div className="w-24 h-24 bg-white border rounded-full flex items-center justify-center relative">
             <img
               src={user?.avatar || ""}
-              alt=""
+              alt="profile"
               className="w-full h-full rounded-full object-cover"
             />
             <button className="absolute bottom-1 right-1 bg-black text-white p-1 rounded-full">
@@ -69,6 +71,13 @@ const AccountInformationModal = ({ open, onClose, user }) => {
           </div>
 
           <div className="flex justify-between items-center border-b pb-3">
+            <span className="text-gray-700">Address</span>
+            <span className="text-gray-700">
+              {user?.address || "email@example.com"}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center border-b pb-3">
             <span className="text-gray-700">Email</span>
             <span className="text-gray-900">
               {user?.email || "email@example.com"}
@@ -85,14 +94,19 @@ const AccountInformationModal = ({ open, onClose, user }) => {
   );
 };
 
-const Account = () => {
+const Account = (props) => {
   const { loginData, setLoginData } = useContext(LoginContext);
-  const [data, setData] = useState([]);
+  const [orderData, setOrderData] = useState([]);
   const [likeData, setLikeData] = useState([]);
   const [recentlyViewData, setRecentlyViewData] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [appointments, setAppointments] = useState([]);
+  const history = useNavigate();
+  const { setData } = props;
+
+  const [messageApi, contextHolder] = message.useMessage();
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
@@ -100,54 +114,100 @@ const Account = () => {
   const showModal = () => setIsModalVisible(true);
   const hideModal = () => setIsModalVisible(false);
 
+  const fetchAppointmentData = async () => {
+    try {
+      const res = await fetch(
+        // `/api/users/appointments?email=${loginData?.body?.email}`
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/appointments?email=${loginData?.body?.email}`
+      );
+      const json = await res.json();
+      setAppointments(json.body || []); // assuming your API responds with { body: [...] }
+    } catch (error) {
+      console.error("Fetch failed:", error);
+    }
+  };
+
   const userData = {
     name: loginData?.body?.name,
     email: loginData?.body?.email,
+    address: loginData?.body?.address,
     eyefitId: loginData?.body?._id,
     avatar: "",
   };
 
-  const appointments = [
-    {
-      _id: "1",
-      customerName: "ISMAEL DOE",
-      address: "251 PUROK TALDAWA - PALIGUI, APALIT, PAMPANGA",
-      contact: "+639171672449",
-      email: "test@test.com",
-      order: "TEST",
-      date: "2025-09-08T00:00:00.000Z",
-      time: "09:00AM",
-      status: "Pending",
-      company: "EO APALIT",
-    },
-    {
-      _id: "2",
-      customerName: "JOHN DOE",
-      address: "123 Main Street, City",
-      contact: "+639171111111",
-      email: "john@test.com",
-      order: "TEST",
-      date: "2025-09-09T00:00:00.000Z",
-      time: "11:00AM",
-      status: "Completed",
-      company: "EO MANILA",
-    },
-    {
-      _id: "3",
-      customerName: "JANE DOE",
-      address: "456 Elm Street, City",
-      contact: "+639172222222",
-      email: "jane@test.com",
-      order: "TEST",
-      date: "2025-09-10T00:00:00.000Z",
-      time: "02:00PM",
-      status: "Cancelled",
-      company: "EO PAMPANGA",
-    },
-  ];
+  const handleUpdateStatus = async (status, id) => {
+    if (status === "Pending") {
+      messageApi.warning("Please select a valid status.");
+      return;
+    }
 
-  const handleLogout = () => {
+    try {
+      // const response = await fetch(`/api/appointments/status/${id}`, {
+      const response = await fetch(
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointments/status/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update status");
+      }
+      await fetchAppointmentData();
+      setIsModalVisible(false);
+      messageApi.success(`Appointment ${status} successfully`);
+    } catch (error) {
+      messageApi.error(error.message);
+    }
+  };
+
+  const handleLogout = async () => {
     console.log("Logout clicked");
+    let token = localStorage.getItem("accountUserToken");
+    // const res = await fetch("/api/users/logout", {
+    const res = await fetch(
+      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/logout",
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+          Accept: "application/json",
+        },
+        credentials: "include",
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.success) {
+      setData(false);
+      setTimeout(() => {
+        localStorage.removeItem("accountUserToken");
+        localStorage.removeItem("hasSeenOnboarding");
+        history("/");
+        setLoginData(null);
+        setData(true);
+      }, 3000);
+    } else {
+      toast.error(res.body, {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+      });
+    }
     // Add your logout logic here
     handleCloseModal();
   };
@@ -192,6 +252,23 @@ const Account = () => {
         <EnvironmentOutlined className="mr-2 text-red-500" />
         {appt.address}
       </div>
+
+      {/* Cancel Button if Pending */}
+      {appt.status === "Pending" && (
+        <div className="flex justify-end mt-4">
+          <Popconfirm
+            title="Cancel Appointment"
+            description="Are you sure to cancel this appointment?"
+            okText="Yes"
+            cancelText="No"
+            onConfirm={() => handleUpdateStatus("Cancelled", appt?._id)}
+          >
+            <button className="bg-red-500 text-white px-4 py-2 rounded-lg shadow hover:bg-red-600 transition">
+              Cancel
+            </button>
+          </Popconfirm>
+        </div>
+      )}
     </div>
   );
 
@@ -202,7 +279,7 @@ const Account = () => {
         `/api/users/orders?userId=${loginData?.body?._id}`
       );
       const json = await res.json();
-      setData(json.body || []); // assuming your API responds with { body: [...] }
+      setOrderData(json.body || []); // assuming your API responds with { body: [...] }
     } catch (error) {
       console.error("Fetch failed:", error);
     }
@@ -230,28 +307,35 @@ const Account = () => {
     }
   };
 
-  const toPayCount = data.filter(
+  const toPayCount = orderData.filter(
     (item) =>
       item.status === "Pending" && item.paymentMethod === "Over the counter"
   );
-  const toShipCount = data.filter(
+  const toShipCount = orderData.filter(
     (item) =>
       (item.status === "Pending" &&
         item.paymentMethod === "Cash on Delivery") ||
       item.status === "Processing"
   );
-  const shippedCount = data.filter((item) => item.status === "Shipped");
-  const completedCount = data.filter((item) => item.status === "Completed");
-  const cancelledCount = data.filter((item) => item.status === "Cancelled");
+  const shippedCount = orderData.filter((item) => item.status === "Shipped");
+  const completedCount = orderData.filter(
+    (item) => item.status === "Completed"
+  );
+  const cancelledCount = orderData.filter(
+    (item) => item.status === "Cancelled"
+  );
 
   useEffect(() => {
     fetchData();
     fetchLikeData();
     fetchRecentlyViewData();
+    fetchAppointmentData();
   }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
+      {contextHolder}
+      <ToastContainer />
       {/* Header Section */}
       <div className="bg-green-200 p-6 flex items-center justify-between rounded-b-3xl">
         <div className="flex items-center space-x-4">
@@ -272,7 +356,8 @@ const Account = () => {
       <div className="p-4">
         <h3 className="font-semibold mb-2">My Orders</h3>
         <div className="flex justify-between mt-5">
-          <div key="To Pay" className="flex flex-col items-center">
+          {/* 🔹 To Pay */}
+          <Link to="/my-orders?tab=1" className="flex flex-col items-center">
             <div className="mb-1 relative">
               <WalletOutlined className="text-lg text-green-600" />
               {toPayCount.length > 0 && (
@@ -282,8 +367,10 @@ const Account = () => {
               )}
             </div>
             <p className="text-xs text-center">To Pay</p>
-          </div>
-          <div key="To Ship" className="flex flex-col items-center">
+          </Link>
+
+          {/* 🔹 To Ship */}
+          <Link to="/my-orders?tab=2" className="flex flex-col items-center">
             <div className="mb-1 relative">
               <GiftOutlined className="text-lg text-green-600" />
               {toShipCount.length > 0 && (
@@ -293,8 +380,10 @@ const Account = () => {
               )}
             </div>
             <p className="text-xs text-center">To Ship</p>
-          </div>
-          <div key="To Receive" className="flex flex-col items-center">
+          </Link>
+
+          {/* 🔹 To Receive */}
+          <Link to="/my-orders?tab=3" className="flex flex-col items-center">
             <div className="mb-1 relative">
               <CarOutlined className="text-lg text-green-600" />
               {shippedCount.length > 0 && (
@@ -304,8 +393,10 @@ const Account = () => {
               )}
             </div>
             <p className="text-xs text-center">To Receive</p>
-          </div>
-          <div key="To Review" className="flex flex-col items-center">
+          </Link>
+
+          {/* 🔹 To Review */}
+          <Link to="/my-orders?tab=4" className="flex flex-col items-center">
             <div className="mb-1 relative">
               <StarOutlined className="text-lg text-green-600" />
               {completedCount.length > 0 && (
@@ -315,8 +406,10 @@ const Account = () => {
               )}
             </div>
             <p className="text-xs text-center">To Review</p>
-          </div>
-          <div key="Cancellation" className="flex flex-col items-center">
+          </Link>
+
+          {/* 🔹 Cancelled */}
+          <Link to="/my-orders?tab=5" className="flex flex-col items-center">
             <div className="mb-1 relative">
               <StopOutlined className="text-lg text-green-600" />
               {cancelledCount.length > 0 && (
@@ -325,8 +418,8 @@ const Account = () => {
                 </span>
               )}
             </div>
-            <p className="text-xs text-center">Cancellation</p>
-          </div>
+            <p className="text-xs text-center">Cancelled</p>
+          </Link>
         </div>
       </div>
 
@@ -338,14 +431,40 @@ const Account = () => {
           <HeartFilled className="text-red-500 text-xl" />
         </div>
         <div className="grid grid-cols-4 gap-3">
-          {likeData?.map((i) => (
-            <img
-              key={i._id}
-              src={i?.product?.productImgURL}
-              alt={`Product ${i.product.productName}`}
-              className="w-full h-24 rounded-lg object-cover"
-            />
-          ))}
+          {likeData.length > 0 ? (
+            likeData?.map((i) => (
+              <img
+                key={i._id}
+                src={i?.product?.productImgURL}
+                alt={`Product ${i.product.productName}`}
+                className="w-full h-24 rounded-lg object-cover"
+              />
+            ))
+          ) : (
+            <div className="col-span-4 flex flex-col items-center justify-center p-6 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-10 h-10 text-red-400 mb-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                />
+              </svg>
+              <p className="text-gray-600 font-medium text-lg mb-1">
+                No Liked Products
+              </p>
+              <p className="text-gray-500 text-sm text-center">
+                Tap the heart icon on products you love, and they’ll appear
+                here.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -356,14 +475,45 @@ const Account = () => {
           <EyeFilled className="text-blue-500 text-xl" />
         </div>
         <div className="grid grid-cols-4 gap-3">
-          {recentlyViewData?.map((i) => (
-            <img
-              key={i._id}
-              src={i?.product?.productImgURL}
-              alt={`Product ${i.product.productName}`}
-              className="w-full h-24 rounded-lg object-cover"
-            />
-          ))}
+          {recentlyViewData.length > 0 ? (
+            recentlyViewData?.map((i) => (
+              <img
+                key={i._id}
+                src={i?.product?.productImgURL}
+                alt={`Product ${i.product.productName}`}
+                className="w-full h-24 rounded-lg object-cover"
+              />
+            ))
+          ) : (
+            <div className="col-span-4 flex flex-col items-center justify-center p-6 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-10 h-10 text-gray-400 mb-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4.5c-4.418 0-8 3.134-8 7s3.582 7 8 7 8-3.134 8-7-3.582-7-8-7z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 11.25a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              <p className="text-gray-600 font-medium text-lg mb-1">
+                No Recently Viewed
+              </p>
+              <p className="text-gray-500 text-sm text-center">
+                Start exploring products and they’ll show up here.
+              </p>
+            </div>
+          )}
         </div>
       </div>
       <div className="px-4 mb-4 pb-24">
@@ -384,7 +534,29 @@ const Account = () => {
             {appointments.slice(0, 2).map(renderCard)}
           </div>
         ) : (
-          <p className="text-sm text-gray-500">No appointments found.</p>
+          <div className="flex flex-col items-center justify-center p-6 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-10 h-10 text-gray-400 mb-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10m-12 8h14a2 2 0 002-2V7a2 2 0 
+      00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
+            </svg>
+            <p className="text-gray-600 font-medium text-lg mb-1">
+              No Appointments
+            </p>
+            <p className="text-gray-500 text-sm text-center">
+              You don’t have any scheduled appointments yet.
+            </p>
+          </div>
         )}
       </div>
       {/* Modal for all appointments */}

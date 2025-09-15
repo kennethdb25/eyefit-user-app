@@ -9,12 +9,13 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { LoginContext } from "./context/LoginContext";
 import Navigation from "./pages/Navigation";
 import Notifications from "./pages/Notifications";
-// import FaceScan from "./pages/FaceScan";
+import FaceScan from "./pages/FaceScan";
 import Account from "./pages/Account";
-// import Settings from "./pages/Settings";
+import Onboarding from "./pages/Onboarding";
 import Cart from "./pages/Cart";
 // import PlaceOrder from "./pages/PlaceOrder";
 import BookAppointment from "./pages/BookAppointment"
+import MyOrdersPage from "./pages/MyOrdersPage";
 
 function App() {
   const history = useNavigate();
@@ -56,7 +57,12 @@ function App() {
         console.log(res);
         console.log("Verified User");
         setLoginData(res);
+        const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding");
+        if (!hasSeenOnboarding) {
+          history("/onboarding");
+        } else {
         history("/home");
+        }
       }
     }
   };
@@ -86,6 +92,7 @@ function App() {
     }, 3000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   return (
     <div>
       {data ? (
@@ -96,13 +103,13 @@ function App() {
             <Route path="/home" element={<HomePage cartData={fetchData} />} />
             <Route path="/cart" element={<Cart cartItems={cartItems} setCartItems={setCartItems} cartData={fetchData} />} />
             <Route path="/notifications" element={<Notifications />} />
-            {/* <Route path="/facescan" element={<FaceScan />} /> */}
-            <Route path="/account" element={<Account />} />
-            {/* <Route path="/settings" element={<Settings />} /> */}
-            {/* <Route path="/place-order" element={<PlaceOrder />} /> */}
+            <Route path="/facescan" element={<FaceScan />} />
+            <Route path="/account" element={<Account setData={setData} />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/my-orders" element={<MyOrdersPage />} />
             <Route path="/appointment" element={<BookAppointment />} />
           </Routes>
-          {loginData ? (<Navigation cartItems={cartItems} fetchData={fetchData} />) : null}
+          {loginData && localStorage.getItem("hasSeenOnboarding") ? (<Navigation cartItems={cartItems} fetchData={fetchData} />) : null}
         </div>
       ) : (
         <Box

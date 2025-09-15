@@ -28,10 +28,10 @@ export default function HomePage(props) {
 
   const fetchData = async () => {
     try {
-      // https://eyefit-shop-800355ab3f46.herokuapp.com
       const res = await fetch(
         `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/product`
       );
+      // const res = await fetch(`/api/user/product`);
       const json = await res.json();
       setData(json.body || []); // assuming your API responds with { body: [...] }
     } catch (error) {
@@ -44,10 +44,10 @@ export default function HomePage(props) {
       setInitiateSearch(true);
       const fetchSearchData = async () => {
         try {
-          // https://eyefit-shop-800355ab3f46.herokuapp.com
           const res = await fetch(
             `https://eyefit-shop-800355ab3f46.herokuapp.com/api/product/search?q=${searchTerm}`
           );
+          // const res = await fetch(`/api/product/search?q=${searchTerm}`);
           const json = await res.json();
           setProducts(json.body || []); // assuming your API responds with { body: [...] }
         } catch (error) {
@@ -67,10 +67,10 @@ export default function HomePage(props) {
       productId,
     };
 
-    // https://eyefit-shop-800355ab3f46.herokuapp.com
     const response = await fetch(
       "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/like",
       {
+        // const response = await fetch("/api/users/like", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -94,10 +94,10 @@ export default function HomePage(props) {
       productId,
     };
 
-    // https://eyefit-shop-800355ab3f46.herokuapp.com
     const response = await fetch(
       "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/view",
       {
+        // const response = await fetch("/api/users/view", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -124,10 +124,11 @@ export default function HomePage(props) {
     if (selectedColor === null) {
       return messageApi.info("Please select a color!");
     }
-    // https://eyefit-shop-800355ab3f46.herokuapp.com
+
     const response = await fetch(
       "https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/checkout",
       {
+        // const response = await fetch("/api/user/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -175,30 +176,33 @@ export default function HomePage(props) {
         />
         <div className="flex items-center justify-between w-full max-w-2xl gap-3 px-4">
           {/* Book Appointment Button */}
-          <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition">
+          <button
+            onClick={() => history("/appointment")}
+            className="bg-green-600 hover:bg-green-700 text-white text-sm md:text-base font-semibold py-2 px-4 rounded-lg shadow transition"
+          >
             <ScheduleOutlined className="text-lg mr-1" />
             SET AN APPOINTMENT
           </button>
 
           {/* Search Icon/Input */}
           <div ref={containerRef} className="flex-1">
-          {!showInput ? (
+            {!showInput ? (
               <button
                 onClick={() => setShowInput(true)}
                 className="p-2 rounded-full shadow hover:bg-gray-100 transition w-10 h-10 flex items-center justify-center"
               >
                 <SearchOutlined style={{ fontSize: "20px" }} />
               </button>
-          ) : (
-          <Input
-            size="large"
-            placeholder="Search..."
-            prefix={<SearchOutlined style={{ fontSize: "18px" }} />}
-            value={searchTerm}
+            ) : (
+              <Input
+                size="large"
+                placeholder="Search..."
+                prefix={<SearchOutlined style={{ fontSize: "18px" }} />}
+                value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="rounded-xl shadow-sm transition-all"
-          />
-          )}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -207,7 +211,7 @@ export default function HomePage(props) {
       {!initiateSearch ? (
         <>
           <section className="px-4 mt-6">
-            <h2 className="text-lg md:text-2xl font-bold mb-4">
+            <h2 className="text-lg md:text-2xl lg:text-3xl font-bold mb-4">
               🌟 Featured Products
             </h2>
             <div className="relative">
@@ -219,96 +223,95 @@ export default function HomePage(props) {
                 <LeftOutlined />
               </button>
 
-            <Carousel
+              <Carousel
                 ref={carouselRef}
-              dots={false}
-                slidesToShow={1}
-              slidesToScroll={1}
-              responsive={[
-                {
+                dots={false}
+                slidesToShow={4}
+                slidesToScroll={1}
+                responsive={[
+                  {
                     breakpoint: 1024,
-                  settings: {
-                    slidesToShow: 1,
+                    settings: {
+                      slidesToShow: 1,
+                    },
                   },
-                },
-                {
+                  {
                     breakpoint: 1280,
-                  settings: {
-                    slidesToShow: 4,
+                    settings: {
+                      slidesToShow: 4,
+                    },
                   },
-                },
-              ]}
-            >
-              {data
-                .filter((item) => item.featured)
-                .map((product) => (
-                  <div
-                    key={product._id}
-                    className="bg-white rounded-2xl shadow-md p-4 flex flex-col m-2 transition hover:shadow-lg"
-                  >
-                    {/* Image + details */}
+                ]}
+              >
+                {data
+                  .filter((item) => item.featured)
+                  .map((product) => (
                     <div
-                        className="flex gap-4 justify-around cursor-pointer"
-                      onClick={() => {
-                        setSelectedProduct(product);
-                        onHandleRecentlyView(product._id);
-                      }}
+                      key={product._id}
+                      className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center m-2 transition hover:shadow-lg"
                     >
-                      <img
-                        src={product.productImgURL || "/glasses.png"}
-                        alt={product.productName}
-                        className="w-40 h-40 md:w-24 md:h-24 object-contain"
-                      />
-                      <div className="flex flex-col justify-center">
-                        <h3 className="text-xs font-semibold text-gray-700">
-                          {product.brand}
-                        </h3>
-                        <p className="text-gray-900 text-xs font-bold">
-                          {product.model}
-                        </p>
-                        <p className="text-green-700 text-xs font-bold">
-                          ₱{product.price}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          Shop: {product.company}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          Stock: {product.stocks}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Buttons */}
-                    <div className="flex items-center gap-2 mt-4">
-                      <button className="flex-1 flex items-center justify-center bg-green-600 hover:bg-green-700 text-white py-2 h-10 rounded-lg text-sm shadow">
-                        Try
-                      </button>
-
-                      <button
+                      {/* Image + details */}
+                      <div
+                        className="flex flex-col items-center text-center cursor-pointer"
                         onClick={() => {
                           setSelectedProduct(product);
                           onHandleRecentlyView(product._id);
                         }}
-                        disabled={product?.stocks === 0}
-                        className={`flex-1 flex items-center justify-center py-2 h-10 rounded-lg shadow text-sm ${
-                          product?.stocks > 0
-                            ? "bg-green-600 hover:bg-green-700 text-white"
-                            : "bg-gray-600 text-white cursor-not-allowed"
-                        }`}
                       >
-                        <ShoppingCartOutlined className="text-lg" />
-                      </button>
+                        {/* Bigger, centered image */}
+                        <img
+                          src={product.productImgURL || "/glasses.png"}
+                          alt={product.productName}
+                          className="w-48 h-48 md:w-56 md:h-56 object-contain mb-4"
+                        />
 
-                      <button
-                        onClick={() => onHandLikeProduct(product?._id)}
-                        className="flex-1 flex items-center justify-center bg-pink-600 hover:bg-pink-700 text-white py-2 h-10 rounded-lg shadow"
-                      >
-                        <HeartOutlined className="text-lg" />
-                      </button>
+                        {/* Bigger product details */}
+                        <h3 className="text-sm md:text-base font-semibold text-gray-700">
+                          {product.brand}
+                        </h3>
+                        <p className="text-gray-900 text-sm md:text-lg font-bold">
+                          {product.model}
+                        </p>
+                        <p className="text-green-700 text-sm md:text-lg font-bold">
+                          ₱{product.price}
+                        </p>
+                        <p className="text-gray-900 text-base md:text-lg font-bold">
+                          Shop: {product.company}
+                        </p>
+                        <p className="text-sm md:text-base text-gray-600">
+                          Stock: {product.stocks}
+                        </p>
+                      </div>
+
+                      {/* Buttons */}
+                      <div className="flex items-center gap-2 mt-4 w-full">
+                        <button className="flex-1 flex items-center justify-center bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-base shadow">
+                          Try
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedProduct(product);
+                            onHandleRecentlyView(product._id);
+                          }}
+                          disabled={product?.stocks === 0}
+                          className={`flex-1 flex items-center justify-center py-3 rounded-lg shadow text-base ${
+                            product?.stocks > 0
+                              ? "bg-green-600 hover:bg-green-700 text-white"
+                              : "bg-gray-600 text-white cursor-not-allowed"
+                          }`}
+                        >
+                          <ShoppingCartOutlined className="text-xl" />
+                        </button>
+                        <button
+                          onClick={() => onHandLikeProduct(product?._id)}
+                          className="flex-1 flex items-center justify-center bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-lg shadow"
+                        >
+                          <HeartOutlined className="text-xl" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
-            </Carousel>
+                  ))}
+              </Carousel>
 
               {/* Right Arrow */}
               <button
@@ -331,63 +334,65 @@ export default function HomePage(props) {
                 .map((product) => (
                   <div
                     key={product._id}
-                    className="w-full bg-white rounded-2xl shadow-md p-4 flex flex-col transition hover:shadow-lg"
+                    className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center m-2 transition hover:shadow-lg"
                   >
-                    {/* Product Image + Details */}
+                    {/* Image + details */}
                     <div
-                      onClick={() => setSelectedProduct(product)}
-                      className="flex gap-4 justify-around"
+                      className="flex flex-col items-center text-center cursor-pointer"
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        onHandleRecentlyView(product._id);
+                      }}
                     >
+                      {/* Bigger, centered image */}
                       <img
                         src={product.productImgURL || "/glasses.png"}
                         alt={product.productName}
-                        className="w-40 h-40 md:w-24 md:h-24 object-contain"
+                        className="w-48 h-48 md:w-56 md:h-56 object-contain mb-4"
                       />
-                      <div className="flex flex-col justify-center">
-                        <h3 className="text-xs font-semibold text-gray-700">
-                          {product.brand}
-                        </h3>
-                        <p className="text-gray-900 text-xs font-bold">
-                          {product.model}
-                        </p>
-                        <p className="text-green-700 text-xs font-bold">
-                          ₱{product.price}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          Shop: {product.company}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          Stock: {product.stocks}
-                        </p>
-                      </div>
+
+                      {/* Bigger product details */}
+                      <h3 className="text-sm md:text-base font-semibold text-gray-700">
+                        {product.brand}
+                      </h3>
+                      <p className="text-gray-900 text-sm md:text-lg font-bold">
+                        {product.model}
+                      </p>
+                      <p className="text-green-700 text-sm md:text-lg font-bold">
+                        ₱{product.price}
+                      </p>
+                      <p className="text-gray-900 text-base md:text-lg font-bold">
+                        Shop: {product.company}
+                      </p>
+                      <p className="text-sm md:text-base text-gray-600">
+                        Stock: {product.stocks}
+                      </p>
                     </div>
 
                     {/* Buttons */}
-                    <div className="flex items-center gap-2 mt-4">
-                      <button className="flex-1 flex items-center justify-center bg-green-600 hover:bg-green-700 text-white py-2 h-10 rounded-lg text-sm shadow">
+                    <div className="flex items-center gap-2 mt-4 w-full">
+                      <button className="flex-1 flex items-center justify-center bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-base shadow">
                         Try
                       </button>
-
                       <button
                         onClick={() => {
                           setSelectedProduct(product);
                           onHandleRecentlyView(product._id);
                         }}
                         disabled={product?.stocks === 0}
-                        className={`flex-1 flex items-center justify-center py-2 h-10 rounded-lg shadow text-sm ${
+                        className={`flex-1 flex items-center justify-center py-3 rounded-lg shadow text-base ${
                           product?.stocks > 0
                             ? "bg-green-600 hover:bg-green-700 text-white"
                             : "bg-gray-600 text-white cursor-not-allowed"
                         }`}
                       >
-                        <ShoppingCartOutlined className="text-lg" />
+                        <ShoppingCartOutlined className="text-xl" />
                       </button>
-
                       <button
                         onClick={() => onHandLikeProduct(product?._id)}
-                        className="flex-1 flex items-center justify-center bg-pink-600 hover:bg-pink-700 text-white py-2 h-10 rounded-lg shadow"
+                        className="flex-1 flex items-center justify-center bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-lg shadow"
                       >
-                        <HeartOutlined className="text-lg" />
+                        <HeartOutlined className="text-xl" />
                       </button>
                     </div>
                   </div>
@@ -405,31 +410,66 @@ export default function HomePage(props) {
               {products.map((product) => (
                 <div
                   key={product._id}
-                  className="bg-white rounded-2xl shadow-md p-4 flex flex-col transition hover:shadow-lg"
+                  className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center m-2 transition hover:shadow-lg"
                 >
-                  <div className="flex gap-4 justify-around">
+                  {/* Image + details */}
+                  <div
+                    className="flex flex-col items-center text-center cursor-pointer"
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      onHandleRecentlyView(product._id);
+                    }}
+                  >
+                    {/* Bigger, centered image */}
                     <img
                       src={product.productImgURL || "/glasses.png"}
                       alt={product.productName}
-                      className="w-40 h-40 md:w-24 md:h-24 object-contain"
+                      className="w-48 h-48 md:w-56 md:h-56 object-contain mb-4"
                     />
-                    <div className="flex flex-col justify-center">
-                      <h3 className="text-xs font-semibold text-gray-700">
-                        {product.brand}
-                      </h3>
-                      <p className="text-gray-900 text-xs font-bold">
-                        {product.model}
-                      </p>
-                      <p className="text-green-700 text-xs font-bold">
-                        ₱{product.price}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        Shop: {product.company}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        Stock: {product.stocks}
-                      </p>
-                    </div>
+
+                    {/* Bigger product details */}
+                    <h3 className="text-sm md:text-base font-semibold text-gray-700">
+                      {product.brand}
+                    </h3>
+                    <p className="text-gray-900 text-sm md:text-lg font-bold">
+                      {product.model}
+                    </p>
+                    <p className="text-green-700 text-sm md:text-lg font-bold">
+                      ₱{product.price}
+                    </p>
+                    <p className="text-gray-900 text-base md:text-lg font-bold">
+                      Shop: {product.company}
+                    </p>
+                    <p className="text-sm md:text-base text-gray-600">
+                      Stock: {product.stocks}
+                    </p>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex items-center gap-2 mt-4 w-full">
+                    <button className="flex-1 flex items-center justify-center bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-base shadow">
+                      Try
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedProduct(product);
+                        onHandleRecentlyView(product._id);
+                      }}
+                      disabled={product?.stocks === 0}
+                      className={`flex-1 flex items-center justify-center py-3 rounded-lg shadow text-base ${
+                        product?.stocks > 0
+                          ? "bg-green-600 hover:bg-green-700 text-white"
+                          : "bg-gray-600 text-white cursor-not-allowed"
+                      }`}
+                    >
+                      <ShoppingCartOutlined className="text-xl" />
+                    </button>
+                    <button
+                      onClick={() => onHandLikeProduct(product?._id)}
+                      className="flex-1 flex items-center justify-center bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-lg shadow"
+                    >
+                      <HeartOutlined className="text-xl" />
+                    </button>
                   </div>
                 </div>
               ))}

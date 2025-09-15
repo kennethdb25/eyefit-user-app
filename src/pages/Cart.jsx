@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LoginContext } from "../context/LoginContext";
 import { Button, Input, Card, Radio, Modal, message, Tooltip } from "antd";
@@ -26,26 +26,69 @@ export default function CartPage(props) {
   const showModal = () => setIsModalOpen(true);
   const handleClose = () => setIsModalOpen(false);
 
-  // Increment
-  const handleIncrement = (index) => {
-    const updatedCart = [...cartItems];
-    if (!updatedCart[index].quantity) updatedCart[index].quantity = 1;
-    if (updatedCart[index].quantity < updatedCart[index].product.stocks) {
-      updatedCart[index].quantity += 1;
-    }
-    setCartItems(updatedCart);
-    checkTotal();
+  const checkTotal = async () => {
+    const withTotals = cartItems.map((p) => ({
+      ...p,
+      totalPrice: p.quantity ? p?.product.price * p.quantity : p?.product.price,
+    }));
+
+    const grandTotal = withTotals.reduce(
+      (acc, item) => acc + item.totalPrice,
+      0
+    );
+
+    setOrderTotal(grandTotal);
   };
 
-  // Decrement
-  const handleDecrement = (index) => {
+  const updateQuantityAPI = async (id, quantity) => {
+    try {
+      await fetch(
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/checkout/${id}/quantity`,
+        {
+          // await fetch(`/api/user/checkout/${id}/quantity`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantity }),
+        }
+      );
+    } catch (error) {
+      console.error("Error updating quantity:", error);
+    }
+  };
+
+  // Increment
+  const handleIncrement = async (index) => {
     const updatedCart = [...cartItems];
     if (!updatedCart[index].quantity) updatedCart[index].quantity = 1;
+
+    if (updatedCart[index].quantity < updatedCart[index].product.stocks) {
+      updatedCart[index].quantity += 1;
+      setCartItems(updatedCart);
+      checkTotal();
+
+      // Call API
+      await updateQuantityAPI(
+        updatedCart[index]._id,
+        updatedCart[index].quantity
+      );
+    }
+  };
+
+  const handleDecrement = async (index) => {
+    const updatedCart = [...cartItems];
+    if (!updatedCart[index].quantity) updatedCart[index].quantity = 1;
+
     if (updatedCart[index].quantity > 1) {
       updatedCart[index].quantity -= 1;
+      setCartItems(updatedCart);
+      checkTotal();
+
+      // Call API
+      await updateQuantityAPI(
+        updatedCart[index]._id,
+        updatedCart[index].quantity
+      );
     }
-    setCartItems(updatedCart);
-    checkTotal();
   };
 
   const handleRadioChange = (e) => {
@@ -68,9 +111,9 @@ export default function CartPage(props) {
     // setIsModalVisible(false);
     try {
       setLoading(true);
-      // https://eyefit-shop-800355ab3f46.herokuapp.com
       const response = await fetch(
         `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/address/${loginData?.body?._id}`,
+        // `/api/users/address/${loginData?.body?._id}`,
         {
           method: "PUT",
           headers: {
@@ -108,10 +151,11 @@ export default function CartPage(props) {
     if (!payload || cartItems.length === 0) {
       return messageApi.info("No order in Cart");
     }
-    // https://eyefit-shop-800355ab3f46.herokuapp.com
+
     const response = await fetch(
       "https://eyefit-shop-800355ab3f46.herokuapp.com/api/orders",
       {
+        // const response = await fetch("/api/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -131,29 +175,32 @@ export default function CartPage(props) {
   };
 
   const handleRemoveItem = async (checkoutId) => {
-    const data = await fetch(
-      // https://eyefit-shop-800355ab3f46.herokuapp.com
-      `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/remove/checkout?checkoutId=${checkoutId}`,
-      {
-        method: "DELETE",
+    try {
+      const data = await fetch(
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/remove/checkout?checkoutId=${checkoutId}`,
+        // `/api/user/remove/checkout?checkoutId=${checkoutId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const res = await data.json();
+
+      if (res.success) {
+        messageApi.success("Item removed successfully!");
+        await cartData(); // This should update cartItems
+      } else {
+        messageApi.error(res?.error || "Something went wrong");
       }
-    );
-
-    const res = await data.json();
-
-    checkTotal();
-    if (res.success) {
-      messageApi.success("Item removed successfully!");
-      cartData();
-    } else {
-      messageApi.error(res?.error || "Something went wrong");
+    } catch (error) {
+      messageApi.error(error?.message || "Something went wrong");
     }
   };
 
   const handleRemoveAllItem = async (toShow) => {
     const data = await fetch(
-      // https://eyefit-shop-800355ab3f46.herokuapp.com
       `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/remove/all/checkout?userId=${loginData?.body?._id}`,
+      // `/api/user/remove/all/checkout?userId=${loginData?.body?._id}`,
       {
         method: "DELETE",
       }
@@ -172,19 +219,9 @@ export default function CartPage(props) {
     }
   };
 
-  const checkTotal = async () => {
-    const withTotals = cartItems.map((p) => ({
-      ...p,
-      totalPrice: p.quantity ? p?.product.price * p.quantity : p?.product.price,
-    }));
-
-    const grandTotal = withTotals.reduce(
-      (acc, item) => acc + item.totalPrice,
-      0
-    );
-
-    setOrderTotal(grandTotal);
-  };
+  useEffect(() => {
+    checkTotal();
+  }, [cartItems]);
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
@@ -194,22 +231,11 @@ export default function CartPage(props) {
         <button onClick={() => history("/home")} className="mr-3">
           &lt;
         </button>
-        <h1 className="text-xl font-semibold">My cart</h1>
+        <h1 className="text-xl font-semibold">My Cart</h1>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4">
-        <div className="flex items-center justify-end">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => history("/appointment")}
-              className="flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full shadow-md transition-all duration-300 hover:shadow-lg active:scale-95 mb-5"
-            >
-              <ScheduleOutlined className="text-lg" />
-              BOOK APPOINTMENT
-            </button>
-          </div>
-        </div>
         {cartItems.length === 0 ? (
           /* ---------- Empty State ---------- */
           <div className="flex flex-col items-center justify-center h-[70vh] text-center">
@@ -279,12 +305,15 @@ export default function CartPage(props) {
                   </div>
 
                   {/* Quantity Controls */}
-                  <div className="flex justify-between items-start">
+                  <div className="flex justify-around items-start">
                     {/* Title & Delete */}
                     <Tooltip title="Remove item">
                       <button
                         onClick={() => handleRemoveItem(item?._id)}
-                        className="flex items-center justify-center gap-1.5 px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-full shadow-md transition-all duration-300 hover:shadow-lg active:scale-95"
+                        className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 
+               bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full 
+               shadow-md transition-all duration-300 hover:shadow-lg active:scale-95 
+               text-xs sm:text-sm md:text-base"
                       >
                         <DeleteOutlined className="text-lg" />
                         REMOVE ITEM
@@ -315,19 +344,29 @@ export default function CartPage(props) {
             {/* </div> */}
 
             {/* Checkout + Trash */}
-            <div className="flex justify-between items-center mt-4 mb-20">
+            <div className="flex justify-around items-center mt-4 mb-20">
               <button
-                onClick={() => setIsModalOpen(true)}
-                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full shadow-md transition-all duration-300 hover:shadow-lg active:scale-95"
+                onClick={() => {
+                  setIsModalOpen(true);
+                  handleCheckOut();
+                }}
+                className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 
+               bg-green-600 hover:bg-green-700 text-white font-semibold rounded-full 
+               shadow-md transition-all duration-300 hover:shadow-lg active:scale-95 
+               text-xs sm:text-sm md:text-base"
               >
-                <ShoppingCartOutlined className="text-lg" />
+                <ShoppingCartOutlined className="text-sm sm:text-base md:text-lg" />
                 CHECK OUT
               </button>
+
               <button
                 onClick={() => handleRemoveAllItem(true)}
-                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full shadow-md transition-all duration-300 hover:shadow-lg active:scale-95"
+                className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 
+               bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full 
+               shadow-md transition-all duration-300 hover:shadow-lg active:scale-95 
+               text-xs sm:text-sm md:text-base"
               >
-                <DeleteOutlined className="text-lg" />
+                <DeleteOutlined className="text-sm sm:text-base md:text-lg" />
                 REMOVE ALL
               </button>
             </div>
@@ -340,6 +379,7 @@ export default function CartPage(props) {
         open={isModalOpen}
         onCancel={handleClose}
         footer={null}
+        closable={false} // 👈 This hides the close (×) button
         width={400}
         styles={{ padding: "0px" }}
       >
@@ -384,79 +424,85 @@ export default function CartPage(props) {
 
           {/* Cart Item */}
           {cartItems.map((item, index) => (
-            <Card
+            <div
               key={index}
-              className="rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 mb-4 border border-gray-100"
-              bodyStyle={{ padding: "16px" }}
+              className="w-full bg-white rounded-2xl shadow-md p-4 flex flex-col transition hover:shadow-lg mt-4"
             >
-              <div className="flex items-center gap-4">
+              <div className="flex gap-4 justify-around">
                 {/* Product Image */}
-                <div className="flex-shrink-0">
-                  <img
-                    src={item?.product?.productImgURL || "/placeholder.png"}
-                    alt={item?.product?.productName}
-                    className="w-20 h-20 object-contain rounded-lg bg-gray-50 border"
-                  />
-                </div>
+                <img
+                  src={item.productImgURL || "/glasses.png"}
+                  alt={item.productName}
+                  className="w-28 h-28 md:w-20 md:h-20 object-contain"
+                />
 
-                {/* Product Details */}
-                <div className="flex-1 flex flex-col justify-between">
-                  {/* Title & Delete */}
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-semibold text-gray-800 text-sm leading-snug">
-                      {`${item?.product?.brand} - ${item?.product?.model}`}
-                    </h3>
-                    <Tooltip title="Remove item">
-                      <Button
-                        onClick={() => handleRemoveItem(item?._id)}
-                        type="text"
-                        size="small"
-                        icon={<DeleteOutlined className="text-red-500" />}
-                      />
-                    </Tooltip>
-                  </div>
+                {/* Price, Color & Quantity */}
+                <div className="flex flex-col justify-center">
+                  {/* Price */}
+                  <h3 className="text-xs font-semibold text-gray-700">
+                    {item?.product.brand}
+                  </h3>
+                  <p className="text-gray-900 text-xs font-bold">
+                    {item?.product.model}
+                  </p>
+                  <p className="text-green-700 text-xs font-bold">
+                    ₱{item?.product.price}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    Shop: {item?.product.company}
+                  </p>
+                  <p className="text-xs text-gray-600">
+                    Stock: {item?.product.stocks}
+                  </p>
 
-                  {/* Price, Color & Quantity */}
-                  <div className="flex justify-between items-center mt-3">
-                    {/* Price */}
-                    <p className="text-green-600 font-semibold text-sm">
-                      ₱{item?.product?.price}.00
-                    </p>
+                  {/* Color Swatch */}
 
-                    {/* Color Swatch */}
-                    <div
-                      key={item?.color}
-                      className="w-6 h-6 rounded-full border border-gray-300"
-                      style={{ backgroundColor: item?.color }}
-                    />
-
-                    {/* Quantity Controls */}
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleDecrement(index)}
-                        className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-lg font-bold transition"
-                      >
-                        −
-                      </button>
-                      <span className="px-3 text-gray-800 font-medium">
-                        {item.quantity || 1}
-                      </span>
-                      <button
-                        onClick={() => handleIncrement(index)}
-                        className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-lg font-bold transition"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
+                  <p className="text-xs text-gray-600">
+                    Availed Color: {item?.color.toUpperCase()}
+                  </p>
                 </div>
               </div>
-            </Card>
+
+              {/* Quantity Controls */}
+              <div className="flex justify-around items-start">
+                {/* Title & Delete */}
+                <Tooltip title="Remove item">
+                  <button
+                    onClick={() => handleRemoveItem(item?._id)}
+                    className="flex items-center justify-center gap-1 px-3 py-1.5 sm:px-4 sm:py-2
+      bg-red-600 hover:bg-red-700 text-white font-medium rounded-full 
+      shadow-sm transition-all duration-300 hover:shadow-md active:scale-95 
+      text-xs sm:text-sm"
+                  >
+                    <DeleteOutlined className="text-base" />
+                    REMOVE
+                  </button>
+                </Tooltip>
+
+                <div className="flex justify-between items-center mr-3">
+                  <button
+                    onClick={() => handleDecrement(index)}
+                    className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-bold transition"
+                  >
+                    −
+                  </button>
+                  <span className="px-2 text-gray-800 font-medium text-sm">
+                    {item.quantity || 1}
+                  </span>
+                  <button
+                    onClick={() => handleIncrement(index)}
+                    className="px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-md text-sm font-bold transition"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
           ))}
 
           {/* Payment Method */}
           <div className="mb-4">
-            <h4 className="font-semibold text-gray-600 text-sm mb-2">
+            <h4 className="font-semibold text-gray-600 text-sm mb-2 mt-4">
               PAYMENT METHOD
             </h4>
             <Card className="rounded-xl shadow" bodyStyle={{ padding: "12px" }}>

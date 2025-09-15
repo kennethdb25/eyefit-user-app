@@ -45,10 +45,10 @@ export default function BookAppointment() {
 
   const fetchStoreData = async () => {
     try {
-      // https://eyefit-shop-800355ab3f46.herokuapp.com
       const res = await fetch(
         `https://eyefit-shop-800355ab3f46.herokuapp.com/api/available/business`
       );
+      // const res = await fetch(`/api/available/business`);
       const json = await res.json();
       setStoreData(json.body || []); // assuming your API responds with { body: [...] }
     } catch (error) {
@@ -66,10 +66,10 @@ export default function BookAppointment() {
     values.date = formattedDate;
     values.time = formattedTime;
 
-    // https://eyefit-shop-800355ab3f46.herokuapp.com
     const response = await fetch(
       "https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointments/add",
       {
+        // const response = await fetch("/api/appointments/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -118,9 +118,9 @@ export default function BookAppointment() {
     fetchStoreData();
 
     async function fetchData() {
-      // https://eyefit-shop-800355ab3f46.herokuapp.com
       const data = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointments?company=${selectedCompany}`,
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/validate/appointment?company=${selectedCompany}`,
+        // `/api/validate/appointment?company=${selectedCompany}`,
         {
           method: "GET",
           headers: {
@@ -147,8 +147,8 @@ export default function BookAppointment() {
     async function fetchData() {
       if (selectedDate) {
         const data = await fetch(
-          // https://eyefit-shop-800355ab3f46.herokuapp.com
-          `https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointments?company=${selectedCompany}`,
+          `https://eyefit-shop-800355ab3f46.herokuapp.com/api/validate/appointment?company=${selectedCompany}`,
+          // `/api/validate/appointment?company=${selectedCompany}`,
           {
             method: "GET",
             headers: {

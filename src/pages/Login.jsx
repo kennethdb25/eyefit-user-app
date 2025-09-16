@@ -49,7 +49,7 @@ export default function Login(props) {
         localStorage.setItem("accountUserToken", lastElement.token);
         window.location.reload();
         setTimeout(() => {
-          history("/home");
+          history("/onboarding");
         }, 1000);
       }, 3000);
     } else {

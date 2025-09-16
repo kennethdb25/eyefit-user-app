@@ -16,6 +16,10 @@ code {
     monospace;
 }
 
+canvas {
+  will-change: transform;
+}
+
 @keyframes slideUpCenter {
   0% {
     transform: translateY(30%) scale(0.95);

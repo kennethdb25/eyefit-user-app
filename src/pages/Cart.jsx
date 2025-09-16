@@ -1,7 +1,16 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LoginContext } from "../context/LoginContext";
-import { Button, Input, Card, Radio, Modal, message, Tooltip } from "antd";
+import {
+  Button,
+  Input,
+  Card,
+  Radio,
+  Modal,
+  message,
+  Tooltip,
+  Popconfirm,
+} from "antd";
 import {
   DeleteOutlined,
   LeftOutlined,
@@ -308,8 +317,14 @@ export default function CartPage(props) {
                   <div className="flex justify-around items-start">
                     {/* Title & Delete */}
                     <Tooltip title="Remove item">
+                      <Popconfirm
+                        title="Remove Item"
+                        description="Are you sure to remove this item?"
+                        okText="Yes"
+                        cancelText="No"
+                        onConfirm={() => handleRemoveItem(item?._id)}
+                      >
                       <button
-                        onClick={() => handleRemoveItem(item?._id)}
                         className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 
                bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full 
                shadow-md transition-all duration-300 hover:shadow-lg active:scale-95 
@@ -318,6 +333,7 @@ export default function CartPage(props) {
                         <DeleteOutlined className="text-lg" />
                         REMOVE ITEM
                       </button>
+                      </Popconfirm>
                     </Tooltip>
 
                     <div className="flex justify-between items-center mr-5">
@@ -359,8 +375,14 @@ export default function CartPage(props) {
                 CHECK OUT
               </button>
 
+              <Popconfirm
+                title="Remove All Item"
+                description="Are you sure to remove all the item(s)?"
+                okText="Yes"
+                cancelText="No"
+                onConfirm={() => handleRemoveAllItem(true)}
+              >
               <button
-                onClick={() => handleRemoveAllItem(true)}
                 className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 
                bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full 
                shadow-md transition-all duration-300 hover:shadow-lg active:scale-95 
@@ -369,6 +391,7 @@ export default function CartPage(props) {
                 <DeleteOutlined className="text-sm sm:text-base md:text-lg" />
                 REMOVE ALL
               </button>
+              </Popconfirm>
             </div>
           </>
         )}
@@ -467,16 +490,23 @@ export default function CartPage(props) {
               <div className="flex justify-around items-start">
                 {/* Title & Delete */}
                 <Tooltip title="Remove item">
-                  <button
-                    onClick={() => handleRemoveItem(item?._id)}
-                    className="flex items-center justify-center gap-1 px-3 py-1.5 sm:px-4 sm:py-2
-      bg-red-600 hover:bg-red-700 text-white font-medium rounded-full 
-      shadow-sm transition-all duration-300 hover:shadow-md active:scale-95 
-      text-xs sm:text-sm"
+                  <Popconfirm
+                    title="Remove Item"
+                    description="Are you sure to remove this item?"
+                    okText="Yes"
+                    cancelText="No"
+                    onConfirm={() => handleRemoveItem(item?._id)}
                   >
-                    <DeleteOutlined className="text-base" />
-                    REMOVE
+                    <button
+                      className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 
+               bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full 
+               shadow-md transition-all duration-300 hover:shadow-lg active:scale-95 
+               text-xs sm:text-sm md:text-base"
+                  >
+                      <DeleteOutlined className="text-lg" />
+                      REMOVE ITEM
                   </button>
+                  </Popconfirm>
                 </Tooltip>
 
                 <div className="flex justify-between items-center mr-3">
@@ -529,12 +559,19 @@ export default function CartPage(props) {
               >
                 ORDER
               </Button>
+              <Popconfirm
+                title="Remove All Item"
+                description="Are you sure to remove all the item(s)?"
+                okText="Yes"
+                cancelText="No"
+                onConfirm={() => handleRemoveAllItem(true)}
+              >
               <Button
-                onClick={() => handleRemoveAllItem(true)}
                 shape="circle"
                 icon={<DeleteOutlined />}
                 className="bg-green-300 shadow"
               />
+              </Popconfirm>
             </div>
           </div>
         </div>

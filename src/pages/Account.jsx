@@ -276,7 +276,7 @@ const Account = (props) => {
     try {
       const res = await fetch(
         // https://eyefit-shop-800355ab3f46.herokuapp.com
-        `/api/users/orders?userId=${loginData?.body?._id}`
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/orders?userId=${loginData?.body?._id}`
       );
       const json = await res.json();
       setOrderData(json.body || []); // assuming your API responds with { body: [...] }
@@ -288,7 +288,9 @@ const Account = (props) => {
   const fetchLikeData = async () => {
     try {
       // https://eyefit-shop-800355ab3f46.herokuapp.com
-      const res = await fetch(`/api/users/like?userId=${loginData?.body?._id}`);
+      const res = await fetch(
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/like?userId=${loginData?.body?._id}`
+      );
       const json = await res.json();
       setLikeData(json.body || []); // assuming your API responds with { body: [...] }
     } catch (error) {
@@ -299,7 +301,9 @@ const Account = (props) => {
   const fetchRecentlyViewData = async () => {
     try {
       // https://eyefit-shop-800355ab3f46.herokuapp.com
-      const res = await fetch(`/api/users/view?userId=${loginData?.body?._id}`);
+      const res = await fetch(
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/view?userId=${loginData?.body?._id}`
+      );
       const json = await res.json();
       setRecentlyViewData(json.body || []); // assuming your API responds with { body: [...] }
     } catch (error) {

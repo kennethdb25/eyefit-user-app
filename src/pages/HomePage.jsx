@@ -328,10 +328,8 @@ export default function HomePage(props) {
             <h2 className="text-lg md:text-2xl font-bold mb-4">
               🛍️ All Products
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4 pb-20">
-              {data
-                .filter((item) => !item.featured)
-                .map((product) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 pb-20">
+              {data.map((product) => (
                   <div
                     key={product._id}
                     className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center m-2 transition hover:shadow-lg"
@@ -348,7 +346,7 @@ export default function HomePage(props) {
                       <img
                         src={product.productImgURL || "/glasses.png"}
                         alt={product.productName}
-                        className="w-48 h-48 md:w-56 md:h-56 object-contain mb-4"
+                      className="w-48 h-24 md:w-56 md:h-28 object-contain mb-4"
                       />
 
                       {/* Bigger product details */}

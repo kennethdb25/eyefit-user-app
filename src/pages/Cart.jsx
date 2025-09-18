@@ -31,6 +31,7 @@ export default function CartPage(props) {
   const [tempAddress, setTempAddress] = useState(address);
   const [loading, setLoading] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
+  const [loadingOrderButton, setLoadingOrderButton] = useState(false);
   const history = useNavigate();
 
   const showModal = () => setIsModalOpen(true);
@@ -148,39 +149,44 @@ export default function CartPage(props) {
   };
 
   const handlePlaceOrder = async () => {
-    const payload = {
-      userId: cartItems[0]?.user?._id || null, // Get userId from the first object
-      paymentMethod,
-      products: cartItems.map((item) => ({
-        productId: item.product._id,
-        quantity: parseInt(item.quantity) || 1,
-        color: item.color,
-      })),
-    };
+    setLoadingOrderButton(true);
+    try {
+      const payload = {
+        userId: cartItems[0]?.user?._id || null, // Get userId from the first object
+        paymentMethod,
+        products: cartItems.map((item) => ({
+          productId: item.product._id,
+          quantity: parseInt(item.quantity) || 1,
+          color: item.color,
+        })),
+      };
 
-    if (!payload || cartItems.length === 0) {
-      return messageApi.info("No order in Cart");
-    }
-
-    const response = await fetch(
-      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/orders",
-      {
-        // const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+      if (!payload || cartItems.length === 0) {
+        return messageApi.info("No order in Cart");
       }
-    );
-    const res = await response.json();
 
-    if (res.success) {
-      messageApi.success("Order Placed Successfully!");
-      cartData();
-      handleRemoveAllItem(false);
-    } else {
-      messageApi.error(res?.error || "Something went wrong");
+      const response = await fetch(
+        "https://eyefit-shop-800355ab3f46.herokuapp.com/api/orders",
+        {
+          // const response = await fetch("/api/orders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+      const res = await response.json();
+
+      if (res.success) {
+        messageApi.success("Order Placed Successfully!");
+        cartData();
+        handleRemoveAllItem(false);
+      } else {
+        messageApi.error(res?.error || "Something went wrong");
+      }
+    } finally {
+      setLoadingOrderButton(false);
     }
   };
 
@@ -556,6 +562,7 @@ export default function CartPage(props) {
             <div className="flex items-center gap-3">
               <Button
                 onClick={() => handlePlaceOrder()}
+                loading={loadingOrderButton}
                 className="bg-green-400 text-white rounded-xl px-6 py-2 shadow"
               >
                 ORDER

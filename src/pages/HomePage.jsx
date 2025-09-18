@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { Carousel, Input, message } from "antd";
+import { Carousel, Input, message, Rate } from "antd";
 import {
   SearchOutlined,
   ShoppingCartOutlined,
@@ -163,7 +163,6 @@ export default function HomePage(props) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {contextHolder}
@@ -525,15 +524,14 @@ export default function HomePage(props) {
             </p>
 
             {/* Star Reviews */}
+
+            {/* className={i < 4 ? "text-yellow-400" : "text-gray-300"} */}
             <div className="flex items-center mb-4">
-              {[...Array(5)].map((_, i) => (
-                <span
-                  key={i}
-                  className={i < 4 ? "text-yellow-400" : "text-gray-300"}
-                >
-                  ★
-                </span>
-              ))}
+              <Rate
+                className="text-yellow-400"
+                allowHalf
+                value={selectedProduct?.rating ? selectedProduct?.rating : 0}
+              />
               <span className="ml-2 text-sm text-gray-500">(120 reviews)</span>
             </div>
 

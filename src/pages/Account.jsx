@@ -181,7 +181,6 @@ const Account = (props) => {
           Authorization: token,
           Accept: "application/json",
         },
-        credentials: "include",
       }
     );
 

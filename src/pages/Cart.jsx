@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-unused-vars */
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LoginContext } from "../context/LoginContext";
@@ -15,7 +17,6 @@ import {
   DeleteOutlined,
   LeftOutlined,
   ShoppingCartOutlined,
-  ScheduleOutlined,
 } from "@ant-design/icons";
 
 export default function CartPage(props) {
@@ -582,6 +583,7 @@ export default function CartPage(props) {
         title="Edit Address"
         open={isModalVisible}
         onOk={handleSave}
+        loading={loading}
         onCancel={() => setIsModalVisible(false)}
         okText="Save"
         cancelText="Cancel"

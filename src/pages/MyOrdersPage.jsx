@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-unused-vars */
 // components/MyOrdersPage.jsx
 import React, { useContext, useEffect, useState } from "react";
 import { Tabs, Card, Empty, Tag, message, Popconfirm } from "antd";

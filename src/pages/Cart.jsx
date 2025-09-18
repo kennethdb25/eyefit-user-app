@@ -324,15 +324,15 @@ export default function CartPage(props) {
                         cancelText="No"
                         onConfirm={() => handleRemoveItem(item?._id)}
                       >
-                      <button
-                        className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 
+                        <button
+                          className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 
                bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full 
                shadow-md transition-all duration-300 hover:shadow-lg active:scale-95 
                text-xs sm:text-sm md:text-base"
-                      >
-                        <DeleteOutlined className="text-lg" />
-                        REMOVE ITEM
-                      </button>
+                        >
+                          <DeleteOutlined className="text-lg" />
+                          REMOVE ITEM
+                        </button>
                       </Popconfirm>
                     </Tooltip>
 
@@ -382,15 +382,15 @@ export default function CartPage(props) {
                 cancelText="No"
                 onConfirm={() => handleRemoveAllItem(true)}
               >
-              <button
-                className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 
+                <button
+                  className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 
                bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full 
                shadow-md transition-all duration-300 hover:shadow-lg active:scale-95 
                text-xs sm:text-sm md:text-base"
-              >
-                <DeleteOutlined className="text-sm sm:text-base md:text-lg" />
-                REMOVE ALL
-              </button>
+                >
+                  <DeleteOutlined className="text-sm sm:text-base md:text-lg" />
+                  REMOVE ALL
+                </button>
               </Popconfirm>
             </div>
           </>
@@ -502,10 +502,10 @@ export default function CartPage(props) {
                bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full 
                shadow-md transition-all duration-300 hover:shadow-lg active:scale-95 
                text-xs sm:text-sm md:text-base"
-                  >
+                    >
                       <DeleteOutlined className="text-lg" />
                       REMOVE ITEM
-                  </button>
+                    </button>
                   </Popconfirm>
                 </Tooltip>
 
@@ -566,11 +566,11 @@ export default function CartPage(props) {
                 cancelText="No"
                 onConfirm={() => handleRemoveAllItem(true)}
               >
-              <Button
-                shape="circle"
-                icon={<DeleteOutlined />}
-                className="bg-green-300 shadow"
-              />
+                <Button
+                  shape="circle"
+                  icon={<DeleteOutlined />}
+                  className="bg-green-300 shadow"
+                />
               </Popconfirm>
             </div>
           </div>

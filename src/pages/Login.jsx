@@ -13,7 +13,6 @@ export default function Login(props) {
   const { LoginValidation } = props;
 
   const handleSubmit = async (values) => {
-    console.log("Login data:", values);
     setLoading(true);
 
     // TODO: send data to backend API

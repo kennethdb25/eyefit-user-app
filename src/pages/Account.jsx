@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -17,7 +18,7 @@ import {
   LeftOutlined,
   CameraOutlined,
 } from "@ant-design/icons";
-import { Modal, message, Button, Popconfirm } from "antd";
+import { Modal, message, Popconfirm } from "antd";
 import { LoginContext } from "../context/LoginContext";
 import { ToastContainer, toast, Bounce } from "react-toastify";
 
@@ -334,7 +335,7 @@ const Account = (props) => {
     fetchLikeData();
     fetchRecentlyViewData();
     fetchAppointmentData();
-  }, []);
+  }, [loginData]);
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -595,13 +596,6 @@ const Account = (props) => {
                 <div className="flex items-center space-x-2">
                   <UserOutlined />
                   <span>Account Information</span>
-                </div>
-                <span>&gt;</span>
-              </li>
-              <li className="flex justify-between items-center cursor-pointer hover:bg-gray-100 p-2 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <SettingOutlined />
-                  <span>Setting</span>
                 </div>
                 <span>&gt;</span>
               </li>

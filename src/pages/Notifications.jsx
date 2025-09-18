@@ -84,7 +84,11 @@ const Notifications = () => {
               className={`flex justify-between items-center p-3 rounded-lg shadow-sm border ${
                 n.userRead ? "bg-gray-100" : "bg-white"
               }`}
-              onClick={() => readNotification(n._id)}
+              onClick={() => {
+                if (!n.userRead) {
+                  readNotification(n._id);
+                }
+              }}
             >
               <div className="flex items-center space-x-3">
                 {!n.userRead && (

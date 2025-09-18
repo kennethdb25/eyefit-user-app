@@ -94,9 +94,25 @@ export default function Register() {
           <Form.Item
             label="Mobile Number"
             name="contact"
-            rules={[{ required: true, message: "Please enter your number" }]}
+            rules={[
+              { required: true, message: "Please enter your number" },
+              {
+                pattern: /^9\d{9}$/,
+                message:
+                  "Mobile number must start with 9 and be 10 digits long",
+              },
+            ]}
           >
-            <Input placeholder="+63**********" />
+            <Input
+              addonBefore="+63"
+              maxLength={10}
+              placeholder="9XXXXXXXXX"
+              onKeyPress={(e) => {
+                if (!/[0-9]/.test(e.key)) {
+                  e.preventDefault(); // block non-numeric
+                }
+              }}
+            />
           </Form.Item>
 
           <Form.Item

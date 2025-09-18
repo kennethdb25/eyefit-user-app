@@ -61,7 +61,7 @@ function App() {
         if (!hasSeenOnboarding) {
           history("/onboarding");
         } else {
-        history("/home");
+          history("/home");
         }
       }
     }
@@ -80,13 +80,14 @@ function App() {
       console.error("Fetch failed:", error);
     }
   };
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loginData?.body?._id]);
 
   useEffect(() => {
     // appointmentDataFetch();
     LoginValidation();
-    setTimeout(() => {
-      fetchData();
-    }, 3000);
     setTimeout(() => {
       setData(true);
     }, 3000);

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { Carousel, Input, message } from "antd";
 import {
   SearchOutlined,
@@ -330,71 +331,71 @@ export default function HomePage(props) {
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 pb-20">
               {data.map((product) => (
+                <div
+                  key={product._id}
+                  className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center m-2 transition hover:shadow-lg"
+                >
+                  {/* Image + details */}
                   <div
-                    key={product._id}
-                    className="bg-white rounded-2xl shadow-md p-4 flex flex-col items-center m-2 transition hover:shadow-lg"
+                    className="flex flex-col items-center text-center cursor-pointer"
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      onHandleRecentlyView(product._id);
+                    }}
                   >
-                    {/* Image + details */}
-                    <div
-                      className="flex flex-col items-center text-center cursor-pointer"
+                    {/* Bigger, centered image */}
+                    <img
+                      src={product.productImgURL || "/glasses.png"}
+                      alt={product.productName}
+                      className="w-48 h-24 md:w-56 md:h-28 object-contain mb-4"
+                    />
+
+                    {/* Bigger product details */}
+                    <h3 className="text-sm md:text-base font-semibold text-gray-700">
+                      {product.brand}
+                    </h3>
+                    <p className="text-gray-900 text-sm md:text-lg font-bold">
+                      {product.model}
+                    </p>
+                    <p className="text-green-700 text-sm md:text-lg font-bold">
+                      ₱{product.price}
+                    </p>
+                    <p className="text-gray-900 text-base md:text-lg font-bold">
+                      Shop: {product.company}
+                    </p>
+                    <p className="text-sm md:text-base text-gray-600">
+                      Stock: {product.stocks}
+                    </p>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="flex items-center gap-2 mt-4 w-full">
+                    <button className="flex-1 flex items-center justify-center bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-sm shadow">
+                      Try
+                    </button>
+                    <button
                       onClick={() => {
                         setSelectedProduct(product);
                         onHandleRecentlyView(product._id);
                       }}
+                      disabled={product?.stocks === 0}
+                      className={`flex-1 flex items-center justify-center py-3 rounded-lg shadow text-base ${
+                        product?.stocks > 0
+                          ? "bg-green-600 hover:bg-green-700 text-white"
+                          : "bg-gray-600 text-white cursor-not-allowed"
+                      }`}
                     >
-                      {/* Bigger, centered image */}
-                      <img
-                        src={product.productImgURL || "/glasses.png"}
-                        alt={product.productName}
-                      className="w-48 h-24 md:w-56 md:h-28 object-contain mb-4"
-                      />
-
-                      {/* Bigger product details */}
-                      <h3 className="text-sm md:text-base font-semibold text-gray-700">
-                        {product.brand}
-                      </h3>
-                      <p className="text-gray-900 text-sm md:text-lg font-bold">
-                        {product.model}
-                      </p>
-                      <p className="text-green-700 text-sm md:text-lg font-bold">
-                        ₱{product.price}
-                      </p>
-                      <p className="text-gray-900 text-base md:text-lg font-bold">
-                        Shop: {product.company}
-                      </p>
-                      <p className="text-sm md:text-base text-gray-600">
-                        Stock: {product.stocks}
-                      </p>
-                    </div>
-
-                    {/* Buttons */}
-                    <div className="flex items-center gap-2 mt-4 w-full">
-                      <button className="flex-1 flex items-center justify-center bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-base shadow">
-                        Try
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedProduct(product);
-                          onHandleRecentlyView(product._id);
-                        }}
-                        disabled={product?.stocks === 0}
-                        className={`flex-1 flex items-center justify-center py-3 rounded-lg shadow text-base ${
-                          product?.stocks > 0
-                            ? "bg-green-600 hover:bg-green-700 text-white"
-                            : "bg-gray-600 text-white cursor-not-allowed"
-                        }`}
-                      >
-                        <ShoppingCartOutlined className="text-xl" />
-                      </button>
-                      <button
-                        onClick={() => onHandLikeProduct(product?._id)}
-                        className="flex-1 flex items-center justify-center bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-lg shadow"
-                      >
-                        <HeartOutlined className="text-xl" />
-                      </button>
-                    </div>
+                      <ShoppingCartOutlined className="text-xl" />
+                    </button>
+                    <button
+                      onClick={() => onHandLikeProduct(product?._id)}
+                      className="flex-1 flex items-center justify-center bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-lg shadow"
+                    >
+                      <HeartOutlined className="text-xl" />
+                    </button>
                   </div>
-                ))}
+                </div>
+              ))}
             </div>
           </section>
         </>

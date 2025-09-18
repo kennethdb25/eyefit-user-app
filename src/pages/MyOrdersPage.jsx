@@ -1,6 +1,6 @@
 // components/MyOrdersPage.jsx
 import React, { useContext, useEffect, useState } from "react";
-import { Tabs, Card, Empty, Tag, message } from "antd";
+import { Tabs, Card, Empty, Tag, message, Popconfirm } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   WalletOutlined,
@@ -164,16 +164,23 @@ export default function MyOrdersPage() {
           }`}
         >
           {order.status === "Pending" && (
-            <button
-              onClick={() => handleUpdateStatus("Cancelled", order._id)}
-              className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 
+            <Popconfirm
+              title="Cancel Order"
+              description="Are you sure to cancel this order?"
+              okText="Yes"
+              cancelText="No"
+              onConfirm={() => handleUpdateStatus("Cancelled", order._id)}
+            >
+              <button
+                className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 
                  bg-red-600 hover:bg-red-700 text-white font-semibold rounded-full 
                  shadow-md transition-all duration-300 hover:shadow-lg active:scale-95 
                  text-xs sm:text-sm md:text-base"
-            >
-              <StopOutlined className="text-lg" />
-              CANCEL ORDER
-            </button>
+              >
+                <StopOutlined className="text-lg" />
+                CANCEL ORDER
+              </button>
+            </Popconfirm>
           )}
           <p className="text-lg font-bold text-gray-900">
             Total: ₱{order.total.toLocaleString()}

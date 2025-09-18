@@ -136,20 +136,20 @@ export default function MyOrdersPage() {
               className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-300"
             >
               <img
-                src={prod.product.productImgURL}
-                alt={prod.product.productName}
+                src={prod?.product?.productImgURL}
+                alt={prod?.product?.productName}
                 className="w-16 h-16 object-cover rounded-md border border-gray-200"
               />
               <div className="flex-1">
                 <p className="font-medium text-gray-800">
-                  {prod.product.productName}
+                  {prod?.product?.productName}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Color: {prod.color} | Qty: {prod.quantity}
+                  Color: {prod?.color} | Qty: {prod?.quantity}
                 </p>
               </div>
               <p className="text-sm font-semibold text-gray-800">
-                ₱{prod.product.price.toLocaleString()}
+                ₱{prod?.product?.price.toLocaleString()}
               </p>
             </div>
           ))}

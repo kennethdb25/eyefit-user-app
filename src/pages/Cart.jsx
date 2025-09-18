@@ -243,7 +243,7 @@ export default function CartPage(props) {
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {contextHolder}
       {/* Header */}
-      <div className="bg-white p-4 flex items-center shadow">
+      <div className="fixed top-0 left-0 w-full bg-white p-4 flex items-center shadow z-50">
         <button onClick={() => history("/home")} className="mr-3">
           &lt;
         </button>
@@ -251,7 +251,7 @@ export default function CartPage(props) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 mt-20">
         {cartItems.length === 0 ? (
           /* ---------- Empty State ---------- */
           <div className="flex flex-col items-center justify-center h-[70vh] text-center">
@@ -288,8 +288,8 @@ export default function CartPage(props) {
                   <div className="flex gap-4 justify-around">
                     {/* Product Image */}
                     <img
-                      src={item.productImgURL || "/glasses.png"}
-                      alt={item.productName}
+                      src={item?.product.productImgURL || "/glasses.png"}
+                      alt={item?.product.productName}
                       className="w-40 h-40 md:w-24 md:h-24 object-contain"
                     />
 
@@ -337,7 +337,7 @@ export default function CartPage(props) {
                shadow-md transition-all duration-300 hover:shadow-lg active:scale-95 
                text-xs sm:text-sm md:text-base"
                         >
-                          <DeleteOutlined className="text-lg" />
+                          <DeleteOutlined className="text-md" />
                           REMOVE ITEM
                         </button>
                       </Popconfirm>
@@ -461,8 +461,8 @@ export default function CartPage(props) {
               <div className="flex gap-4 justify-around">
                 {/* Product Image */}
                 <img
-                  src={item.productImgURL || "/glasses.png"}
-                  alt={item.productName}
+                  src={item?.product.productImgURL || "/glasses.png"}
+                  alt={item?.product.productName}
                   className="w-28 h-28 md:w-20 md:h-20 object-contain"
                 />
 
@@ -494,7 +494,7 @@ export default function CartPage(props) {
               </div>
 
               {/* Quantity Controls */}
-              <div className="flex justify-around items-start">
+              <div className="flex justify-between items-start">
                 {/* Title & Delete */}
                 <Tooltip title="Remove item">
                   <Popconfirm
@@ -510,7 +510,7 @@ export default function CartPage(props) {
                shadow-md transition-all duration-300 hover:shadow-lg active:scale-95 
                text-xs sm:text-sm md:text-base"
                     >
-                      <DeleteOutlined className="text-lg" />
+                      <DeleteOutlined className="text-md" />
                       REMOVE ITEM
                     </button>
                   </Popconfirm>

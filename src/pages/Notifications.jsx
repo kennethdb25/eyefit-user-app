@@ -17,7 +17,7 @@ const Notifications = () => {
   const fetchData = async () => {
     try {
       const res = await fetch(
-        // https://eyefit-shop-800355ab3f46.herokuapp.com
+        //
         `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/notification?userId=${loginData?.body?._id}`
       );
       const json = await res.json();
@@ -35,7 +35,7 @@ const Notifications = () => {
   // Delete a single notification
   const readNotification = async (id) => {
     try {
-      // https://eyefit-shop-800355ab3f46.herokuapp.com
+      //
       const res = await fetch(
         `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/notification?notificationId=${id}`,
         {
@@ -78,7 +78,7 @@ const Notifications = () => {
       </div>
 
       {/* Notification List */}
-      <div className="flex-1 p-4 space-y-3">
+      <div className="flex-1 p-4 space-y-3 mb-24">
         {notifications.length > 0 ? (
           notifications.map((n) => (
             <div

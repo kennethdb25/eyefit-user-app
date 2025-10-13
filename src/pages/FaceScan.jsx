@@ -11,7 +11,6 @@ const LENSES = [
   {
     id: "e094eba6-1eff-4cad-824c-82dcd804168b", // Replace with real Lens ID
     groupId: "849f744e-8f7c-45dd-9d08-4e5afc08ce2d", // Replace with real Group ID
-    name: "Gold Glasses",
   },
 ];
 
@@ -64,13 +63,13 @@ export default function FaceScan() {
         await session.setSource(source);
 
         const lens = await cameraKit.lensRepository.loadLens(
-          LENSES[0].id,
+          location.state?.id,
           LENSES[0].groupId
         );
         await session.applyLens(lens);
 
         await session.play();
-        if (!mounted) await session.stop();
+        if (!mounted) await session.destroy();
         setLoading(false);
       } catch (err) {
         console.error("CameraKit Init Error:", err);

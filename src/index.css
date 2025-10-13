@@ -19,6 +19,63 @@ code {
 canvas {
   will-change: transform;
 }
+/* Tabs Wrapper */
+.custom-tabs .ant-tabs-nav {
+  margin-bottom: 1rem !important;
+  border-bottom: none !important;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap; /* responsive */
+}
+
+/* Tab Item */
+.custom-tabs .ant-tabs-tab {
+  background: #f9fafb;
+  border-radius: 9999px; /* pill style */
+  padding: 6px 16px !important;
+  margin: 0 6px !important;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+  color: #374151; /* dark gray text */
+  font-weight: 500;
+}
+
+/* Hover */
+.custom-tabs .ant-tabs-tab:hover {
+  background: #e6f4ff;
+  border: 1px solid #91caff;
+  color: #1677ff;
+}
+
+/* Active */
+.custom-tabs .ant-tabs-tab-active {
+  background: #1677ff;
+  color: #fff !important;
+  border: 1px solid #1677ff;
+  box-shadow: 0 2px 6px rgba(22, 119, 255, 0.3);
+}
+
+/* Active Label */
+.custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* Hide underline */
+.custom-tabs .ant-tabs-ink-bar {
+  display: none !important;
+}
+
+/* Tap highlight + ripple effect */
+.custom-tabs .ant-tabs-tab-btn {
+  -webkit-tap-highlight-color: transparent; /* removes blue circle on mobile tap */
+  transition: background-color 0.2s ease;
+}
+
+.custom-tabs .ant-tabs-tab-btn:active {
+  background-color: rgba(0, 0, 0, 0.05); /* subtle press effect */
+  border-radius: 9999px;
+}
 
 @keyframes slideUpCenter {
   0% {

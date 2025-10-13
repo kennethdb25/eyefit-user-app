@@ -24,167 +24,149 @@ const { Option } = Select;
 const { TextArea } = Input;
 
 export default function BookAppointment() {
-  const { loginData, setLoginData } = useContext(LoginContext);
+  const { loginData } = useContext(LoginContext);
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm();
   const history = useNavigate();
   const [storeData, setStoreData] = useState([]);
-  const [fullyBookedDates, setFullyBookedDates] = useState([]);
+  const [bookedSlots, setBookedSlots] = useState({}); // now grouped by date
   const [selectedDate, setSelectedDate] = useState(null);
-  const [bookedSlots, setBookedSlots] = useState([]);
-  // const [listOfBookedDate, setListOfBookedDate] = useState([]);
   const [selectedTime, setSelectedTime] = useState(null);
-  const [selectedCompany, setSelectedCompany] = useState();
+  const [selectedCompany, setSelectedCompany] = useState(null);
+  const [config, setConfig] = useState(null);
 
   const currentUser = {
     name: loginData?.body?.name,
     gender: loginData?.body?.gender,
     email: loginData?.body?.email,
-    phone: loginData?.body?.contact,
+    phone: loginData?.body?.contact.replace("+63", ""),
     address: loginData?.body?.address,
   };
 
+  // Fetch business appointment config
+  const fetchConfig = async (company) => {
+    try {
+      const res = await fetch(
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointment-config/${company}`
+      );
+      const data = await res.json();
+      setConfig(data.success ? data.body : null);
+    } catch (err) {
+      console.error("Error fetching config:", err);
+      setConfig(null);
+    }
+  };
+
+  // Fetch all available businesses
   const fetchStoreData = async () => {
     try {
       const res = await fetch(
         `https://eyefit-shop-800355ab3f46.herokuapp.com/api/available/business`
       );
-      // const res = await fetch(`/api/available/business`);
       const json = await res.json();
-      setStoreData(json.body || []); // assuming your API responds with { body: [...] }
+      setStoreData(json.body || []);
     } catch (error) {
       console.error("Fetch failed:", error);
     }
   };
 
-  const onFinish = async (values) => {
-    if (selectedDate === null && !selectedTime) {
-      messageApi.error("Please enter description, date and time");
-      return;
-    }
-    const formattedDate = selectedDate.format("YYYY-MM-DD");
-    const formattedTime = selectedTime;
-    values.date = formattedDate;
-    values.time = formattedTime;
-
-    const response = await fetch(
-      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointments/add",
-      {
-        // const response = await fetch("/api/appointments/add", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      }
-    );
-    const res = await response.json();
-    if (res.success) {
-      messageApi.success("Appointment Requested!");
-      form.resetFields();
-    } else {
-      messageApi.error(res?.error || "Something went wrong");
-    }
-  };
-
-  //disableDays
-  const disableDates = (current) => {
-    return (
-      current.isBefore(dayjs(), "day") ||
-      current.day() === 0 ||
-      current.day() === 6 ||
-      fullyBookedDates.includes(current.format("YYYY-MM-DD"))
-    );
-  };
-
-  const availableTime = [
-    "08:30AM",
-    "09:00AM",
-    "09:30AM",
-    "10:00AM",
-    "10:30AM",
-    "11:00AM",
-    "11:30AM",
-    "01:00PM",
-    "01:30PM",
-    "02:00PM",
-    "02:30PM",
-    "03:00PM",
-    "03:30PM",
-    "04:00PM",
-    "04:30PM",
-  ].filter((time) => !bookedSlots.includes(time));
-
-  useEffect(() => {
-    fetchStoreData();
-
-    async function fetchData() {
+  // Fetch all booked appointments grouped by date
+  const fetchBookedSlots = async (company) => {
+    if (!company) return;
+    try {
       const data = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/validate/appointment?company=${selectedCompany}`,
-        // `/api/validate/appointment?company=${selectedCompany}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/validate/appointment?company=${company}`
       );
       const res = await data.json();
 
-      const bookedDates = res.body?.reduce((acc, appointment) => {
-        acc[appointment?.date] = (acc[appointment?.date] || 0) + 1;
+      // Group by date
+      const bookedByDate = res.body?.reduce((acc, appointment) => {
+        const date = appointment.date.split("T")[0];
+        if (!acc[date]) acc[date] = [];
+        acc[date].push(appointment.time);
         return acc;
       }, {});
-      const fullyBooked = Object.keys(bookedDates).filter(
-        (date) => bookedDates[date] >= 16
-      );
-      setFullyBookedDates(fullyBooked);
+      setBookedSlots(bookedByDate || {});
+    } catch (error) {
+      console.error(error);
+      setBookedSlots({});
     }
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCompany]);
+  };
 
   useEffect(() => {
-    async function fetchData() {
-      if (selectedDate) {
-        const data = await fetch(
-          `https://eyefit-shop-800355ab3f46.herokuapp.com/api/validate/appointment?company=${selectedCompany}`,
-          // `/api/validate/appointment?company=${selectedCompany}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        const res = await data.json();
+    fetchStoreData();
+  }, []);
 
-        const filtered = res.body
-          .filter(
-            (a) => (a?.date).split("T")[0] === selectedDate.format("YYYY-MM-DD")
-          )
-          .map((a) => a.time);
-        setBookedSlots(filtered);
-      }
+  useEffect(() => {
+    fetchBookedSlots(selectedCompany);
+  }, [selectedCompany]);
+
+  const generateTimeSlots = (start, end, interval = 30) => {
+    const slots = [];
+    let current = dayjs(start, "HH:mm");
+    const endTime = dayjs(end, "HH:mm");
+    while (current.isBefore(endTime) || current.isSame(endTime)) {
+      slots.push(current.format("hh:mmA"));
+      current = current.add(interval, "minute");
     }
-    fetchData();
-    // appointmentDataFetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate]);
+    return slots;
+  };
 
-  // const appointmentDataFetch = async () => {
-  //   const data = await fetch(`/api/appointments?company=${selectedCompany}`, {
-  //     method: "GET",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //   });
+  const availableTime =
+    selectedDate && config
+      ? generateTimeSlots(
+          config.workingHours.start,
+          config.workingHours.end
+        ).filter(
+          (slot) =>
+            !(bookedSlots[selectedDate.format("YYYY-MM-DD")] || []).includes(
+              slot
+            )
+        )
+      : [];
 
-  //   const res = await data.json();
-  //   if (res.status === 200) {
-  //     setListOfBookedDate(res.body);
-  //   }
-  // };
+  const disableDates = (current) => {
+    if (!config) return current.isBefore(dayjs(), "day");
+
+    const isPast = current.isBefore(dayjs(), "day");
+    const isUnavailable = config.exceptions?.includes(
+      current.format("YYYY-MM-DD")
+    );
+    const isWorkingDay = config.workingDays.includes(current.day());
+
+    return isPast || isUnavailable || !isWorkingDay;
+  };
+
+  const onFinish = async (values) => {
+    if (!selectedDate || !selectedTime) {
+      messageApi.error("Please enter description, date, and time");
+      return;
+    }
+
+    values.date = selectedDate.format("YYYY-MM-DD");
+    values.time = selectedTime;
+
+    try {
+      const response = await fetch(
+        "https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointments/add",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(values),
+        }
+      );
+      const res = await response.json();
+      if (res.success) {
+        messageApi.success("Appointment Requested!");
+        form.resetFields();
+      } else {
+        messageApi.error(res?.error || "Something went wrong");
+      }
+    } catch (err) {
+      console.error(err);
+      messageApi.error("Something went wrong");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center">
@@ -204,7 +186,6 @@ export default function BookAppointment() {
 
         {/* Form */}
         <div className="pb-24">
-          {/* Adjust padding to your footer height */}
           <Form
             layout="vertical"
             form={form}
@@ -227,7 +208,8 @@ export default function BookAppointment() {
               <Select
                 placeholder="Select Store"
                 onChange={(value) => {
-                  setSelectedCompany(value); // This will log the selected company
+                  setSelectedCompany(value);
+                  fetchConfig(value);
                 }}
               >
                 {storeData.map(({ company }) => (
@@ -249,6 +231,56 @@ export default function BookAppointment() {
                 disabledDate={disableDates}
                 onChange={(date) => setSelectedDate(date)}
                 className="w-full"
+                dateRender={(current) => {
+                  const formatted = current.format("YYYY-MM-DD");
+
+                  // RED for exceptions
+                  if (config?.exceptions?.includes(formatted)) {
+                    return (
+                      <div
+                        style={{
+                          border: "1px solid red",
+                          borderRadius: "50%",
+                          color: "red",
+                        }}
+                      >
+                        {current.date()}
+                      </div>
+                    );
+                  }
+
+                  const isWorkingDay = config?.workingDays?.includes(
+                    current.day()
+                  );
+                  const isFuture = current.isSameOrAfter(dayjs(), "day");
+
+                  if (isWorkingDay && isFuture) {
+                    const bookedForDay = bookedSlots[formatted] || [];
+                    const totalSlots = generateTimeSlots(
+                      config.workingHours.start,
+                      config.workingHours.end
+                    );
+                    const availableSlots = totalSlots.filter(
+                      (slot) => !bookedForDay.includes(slot)
+                    );
+
+                    if (availableSlots.length > 0) {
+                      return (
+                        <div
+                          style={{
+                            border: "1px solid green",
+                            borderRadius: "50%",
+                            color: "green",
+                          }}
+                        >
+                          {current.date()}
+                        </div>
+                      );
+                    }
+                  }
+
+                  return current.date();
+                }}
               />
             </Form.Item>
 
@@ -256,19 +288,8 @@ export default function BookAppointment() {
             <Form.Item
               label="Select Time"
               name="time"
-              labelCol={{
-                span: 24,
-              }}
-              wrapperCol={{
-                span: 24,
-              }}
               hasFeedback
-              rules={[
-                {
-                  required: true,
-                  message: "Please select a time!",
-                },
-              ]}
+              rules={[{ required: true, message: "Please select a time!" }]}
             >
               <Select
                 placeholder="Select Time"
@@ -286,87 +307,86 @@ export default function BookAppointment() {
               </Select>
             </Form.Item>
 
-            {/* Personal Information Section */}
+            {/* Personal Info */}
             <div className="bg-gray-50 rounded-lg p-3">
               <h3 className="text-center font-semibold mb-3">
                 Personal Information
               </h3>
-
               <Form.Item
-                label="Name"
+                label="Full Name"
                 name="name"
-                rules={[{ required: true, message: "Please enter your name" }]}
+                rules={[
+                  { required: true, message: "Please enter the full name" },
+                  { max: 40, message: "Name can not exceed 40 characters" },
+                ]}
               >
-                <Input
-                  disabled
-                  placeholder="Your name"
-                  className="bg-green-100"
-                />
+                <Input placeholder="Jane Smith" className="bg-green-100" />
               </Form.Item>
               <Form.Item
                 label="Gender"
                 name="gender"
                 rules={[
-                  { required: true, message: "Please enter your gemder" },
+                  { required: true, message: "Please select your gender" },
                 ]}
               >
-                <Input
-                  disabled
-                  placeholder="Your gender"
-                  className="bg-green-100"
-                />
+                <Select placeholder="Select Gender" className="bg-green-100">
+                  <Option value="male" className="bg-green-100">
+                    Male
+                  </Option>
+                  <Option value="female" className="bg-green-100">
+                    Female
+                  </Option>
+                  <Option value="other" className="bg-green-100">
+                    Other
+                  </Option>
+                </Select>
               </Form.Item>
-
-              <Form.Item
-                label="Email"
-                name="email"
-                rules={[
-                  { type: "email", required: true, message: "Invalid email" },
-                ]}
-              >
-                <Input
-                  disabled
-                  placeholder="Your email"
-                  className="bg-green-100"
-                />
+              <Form.Item label="Email" name="email">
+                <Input disabled className="bg-green-100" />
               </Form.Item>
-
               <Form.Item
-                label="Phone"
+                label="Mobile Number"
                 name="phone"
-                rules={[{ required: true, message: "Please enter your phone" }]}
+                rules={[
+                  { required: true, message: "Please enter your number" },
+                  {
+                    pattern: /^9\d{9}$/,
+                    message:
+                      "Mobile number must start with 9 and be 10 digits long",
+                  },
+                ]}
               >
                 <Input
-                  disabled
-                  placeholder="Your phone number"
                   className="bg-green-100"
+                  addonBefore="+63"
+                  maxLength={10}
+                  placeholder="9XXXXXXXXX"
+                  onKeyPress={(e) => {
+                    if (!/[0-9]/.test(e.key)) {
+                      e.preventDefault(); // block non-numeric
+                    }
+                  }}
                 />
               </Form.Item>
-
               <Form.Item
                 label="Address"
                 name="address"
                 rules={[
-                  { required: true, message: "Please enter your address" },
+                  { required: true, message: "Please add your address!" },
                 ]}
               >
-                <Input
-                  disabled
-                  placeholder="Your address"
-                  className="bg-green-100"
-                />
+                <Input className="bg-green-100" />
               </Form.Item>
-
-              <Form.Item label="Description" name="description">
-                <TextArea
-                  rows={3}
-                  placeholder="Add description"
-                  className="bg-green-100"
-                />
+              <Form.Item
+                label="Description"
+                name="description"
+                rules={[{ required: true, message: "Please add description!" }]}
+              >
+                <TextArea rows={3} className="bg-green-100" />
               </Form.Item>
             </div>
 
-            {/* Submit Button */}
+            {/* Submit */}
             <Form.Item>
               <Button
                 type="primary"

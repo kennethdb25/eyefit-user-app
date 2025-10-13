@@ -43,17 +43,17 @@ const Navigation = ({ cartItems, fetchData }) => {
 
         {/* Middle Circle (Face ID / Scan) */}
         <div
-          onClick={() => history("/facescan")}
+          onClick={() => history("/face-shape-detector")}
           className="absolute -top-6 left-1/2 transform -translate-x-1/2"
         >
           <div
             className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg cursor-pointer ${
-              isActive("/facescan") ? "bg-green-500" : "bg-white"
+              isActive("/face-shape-detector") ? "bg-green-500" : "bg-white"
             }`}
           >
             <LuScanFace
               className={`w-7 h-7 ${
-                isActive("/facescan") ? "text-white" : "text-black"
+                isActive("/face-shape-detector") ? "text-white" : "text-black"
               }`}
             />
           </div>

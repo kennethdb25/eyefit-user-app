@@ -16,6 +16,7 @@ import Cart from "./pages/Cart";
 // import PlaceOrder from "./pages/PlaceOrder";
 import BookAppointment from "./pages/BookAppointment"
 import MyOrdersPage from "./pages/MyOrdersPage";
+import FaceShapeDetector from "./pages/FaceShapeDetector";
 
 function App() {
   const history = useNavigate();
@@ -42,7 +43,7 @@ function App() {
     if (localStorage.getItem("accountUserToken")) {
       let validToken = localStorage.getItem("accountUserToken");
       // https://eyefit-shop-800355ab3f46.herokuapp.com
-      const data = await fetch("https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/validate", {
+      const data = await fetch("https://eyefit-shop-800355ab3f46.herokuapp.comhttps://eyefit-shop-800355ab3f46.herokuapp.com/api/users/validate", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -51,7 +52,7 @@ function App() {
       });
       const res = await data.json();
 
-      if (res.status === 401 || !res || !location.pathname === "/") {
+      if (res.status === 401) {
         console.log(res);
       } else {
         console.log(res);
@@ -105,6 +106,7 @@ function App() {
             <Route path="/cart" element={<Cart cartItems={cartItems} setCartItems={setCartItems} cartData={fetchData} />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/facescan" element={<FaceScan />} />
+            <Route path="/face-shape-detector" element={<FaceShapeDetector />} />
             <Route path="/account" element={<Account setData={setData} />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/my-orders" element={<MyOrdersPage />} />

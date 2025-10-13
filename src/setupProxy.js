@@ -4,7 +4,7 @@ module.exports = function (app) {
     createProxyMiddleware({
       target:
         // "https://aclc-guidance-management-sys-7ae44f42e747.herokuapp.com:8080",
-        // "https://eyefit-shop-800355ab3f46.herokuapp.com",
+        // "",
         "http://localhost:5000",
       changeOrigin: true,
       pathFilter: "/api",

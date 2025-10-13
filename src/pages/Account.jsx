@@ -1,6 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 import {
   SettingOutlined,
   UserOutlined,
@@ -115,14 +118,27 @@ const Account = (props) => {
   const showModal = () => setIsModalVisible(true);
   const hideModal = () => setIsModalVisible(false);
 
+  const settings = {
+    dots: false,
+    infinite: false,
+    speed: 500,
+    slidesToShow: 4, // show 4 images at once
+    slidesToScroll: 4, // move 4 images per click
+    nextArrow: (
+      <button className="absolute right-0 z-10 p-2 bg-transparent">➡️</button>
+    ),
+    prevArrow: (
+      <button className="absolute left-0 z-10 p-2 bg-transparent">⬅️</button>
+    ),
+  };
+
   const fetchAppointmentData = async () => {
     try {
       const res = await fetch(
-        // `/api/users/appointments?email=${loginData?.body?.email}`
         `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/appointments?email=${loginData?.body?.email}`
       );
       const json = await res.json();
-      setAppointments(json.body || []); // assuming your API responds with { body: [...] }
+      setAppointments(json.body || []);
     } catch (error) {
       console.error("Fetch failed:", error);
     }
@@ -143,7 +159,7 @@ const Account = (props) => {
     }
 
     try {
-      // const response = await fetch(`/api/appointments/status/${id}`, {
+      // const response = await fetch(`https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointments/status/${id}`, {
       const response = await fetch(
         `https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointments/status/${id}`,
         {
@@ -171,7 +187,7 @@ const Account = (props) => {
   const handleLogout = async () => {
     console.log("Logout clicked");
     let token = localStorage.getItem("accountUserToken");
-    // const res = await fetch("/api/users/logout", {
+    // const res = await fetch("https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/logout", {
     const res = await fetch(
       "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/logout",
       {
@@ -275,11 +291,11 @@ const Account = (props) => {
   const fetchData = async () => {
     try {
       const res = await fetch(
-        // https://eyefit-shop-800355ab3f46.herokuapp.com
+        //
         `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/orders?userId=${loginData?.body?._id}`
       );
       const json = await res.json();
-      setOrderData(json.body || []); // assuming your API responds with { body: [...] }
+      setOrderData(json.body || []);
     } catch (error) {
       console.error("Fetch failed:", error);
     }
@@ -287,12 +303,12 @@ const Account = (props) => {
 
   const fetchLikeData = async () => {
     try {
-      // https://eyefit-shop-800355ab3f46.herokuapp.com
+      //
       const res = await fetch(
         `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/like?userId=${loginData?.body?._id}`
       );
       const json = await res.json();
-      setLikeData(json.body || []); // assuming your API responds with { body: [...] }
+      setLikeData(json.body || []);
     } catch (error) {
       console.error("Fetch failed:", error);
     }
@@ -300,12 +316,12 @@ const Account = (props) => {
 
   const fetchRecentlyViewData = async () => {
     try {
-      // https://eyefit-shop-800355ab3f46.herokuapp.com
+      //
       const res = await fetch(
         `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/view?userId=${loginData?.body?._id}`
       );
       const json = await res.json();
-      setRecentlyViewData(json.body || []); // assuming your API responds with { body: [...] }
+      setRecentlyViewData(json.body || []);
     } catch (error) {
       console.error("Fetch failed:", error);
     }
@@ -318,12 +334,13 @@ const Account = (props) => {
   const toShipCount = orderData.filter(
     (item) =>
       (item.status === "Pending" &&
-        item.paymentMethod === "Cash on Delivery") ||
+        (item.paymentMethod === "Cash on Delivery" ||
+          item.paymentMethod === "Debit/Credit Card")) ||
       item.status === "Processing"
   );
   const shippedCount = orderData.filter((item) => item.status === "Shipped");
-  const completedCount = orderData.filter(
-    (item) => item.status === "Completed"
+  const reviewCount = orderData.filter(
+    (item) => item.status === "Completed" && !item.ratingStatus
   );
   const cancelledCount = orderData.filter(
     (item) => item.status === "Cancelled"
@@ -403,9 +420,9 @@ const Account = (props) => {
           <Link to="/my-orders?tab=4" className="flex flex-col items-center">
             <div className="mb-1 relative">
               <StarOutlined className="text-lg text-green-600" />
-              {completedCount.length > 0 && (
+              {reviewCount.length > 0 && (
                 <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs font-bold w-4 h-4 flex items-center justify-center rounded-full">
-                  {completedCount.length}
+                  {reviewCount.length}
                 </span>
               )}
             </div>
@@ -413,7 +430,7 @@ const Account = (props) => {
           </Link>
 
           {/* 🔹 Cancelled */}
-          <Link to="/my-orders?tab=5" className="flex flex-col items-center">
+          <Link to="/my-orders?tab=6" className="flex flex-col items-center">
             <div className="mb-1 relative">
               <StopOutlined className="text-lg text-green-600" />
               {cancelledCount.length > 0 && (
@@ -434,42 +451,43 @@ const Account = (props) => {
           <h3 className="font-semibold mr-1">Likes</h3>
           <HeartFilled className="text-red-500 text-xl" />
         </div>
-        <div className="grid grid-cols-4 gap-3">
-          {likeData.length > 0 ? (
-            likeData?.map((i) => (
-              <img
-                key={i._id}
-                src={i?.product?.productImgURL}
-                alt={`Product ${i.product.productName}`}
-                className="w-full h-24 rounded-lg object-cover"
-              />
-            ))
-          ) : (
-            <div className="col-span-4 flex flex-col items-center justify-center p-6 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-10 h-10 text-red-400 mb-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+
+        {likeData.length > 0 ? (
+          <Slider {...settings}>
+            {likeData.map((i) => (
+              <div key={i._id} className="px-2">
+                <img
+                  src={i?.product?.variants[0]?.images[0]?.url}
+                  alt={`Product ${i.product.productName}`}
+                  className="w-full h-24 rounded-lg object-cover"
                 />
-              </svg>
-              <p className="text-gray-600 font-medium text-lg mb-1">
-                No Liked Products
-              </p>
-              <p className="text-gray-500 text-sm text-center">
-                Tap the heart icon on products you love, and they’ll appear
-                here.
-              </p>
-            </div>
-          )}
-        </div>
+              </div>
+            ))}
+          </Slider>
+        ) : (
+          <div className="col-span-4 flex flex-col items-center justify-center p-6 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-10 h-10 text-red-400 mb-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              />
+            </svg>
+            <p className="text-gray-600 font-medium text-lg mb-1">
+              No Liked Products
+            </p>
+            <p className="text-gray-500 text-sm text-center">
+              Tap the heart icon on products you love, and they’ll appear here.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Recently Viewed Section */}
@@ -478,47 +496,65 @@ const Account = (props) => {
           <h3 className="font-semibold mr-1">Recently Viewed</h3>
           <EyeFilled className="text-blue-500 text-xl" />
         </div>
-        <div className="grid grid-cols-4 gap-3">
-          {recentlyViewData.length > 0 ? (
-            recentlyViewData?.map((i) => (
+
+        {recentlyViewData.length === 0 ? (
+          // 🔹 Empty state
+          <div className="col-span-4 flex flex-col items-center justify-center p-6 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-10 h-10 text-gray-400 mb-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4.5c-4.418 0-8 3.134-8 7s3.582 7 8 7 8-3.134 8-7-3.582-7-8-7z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 11.25a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            <p className="text-gray-600 font-medium text-lg mb-1">
+              No Recently Viewed
+            </p>
+            <p className="text-gray-500 text-sm text-center">
+              Start exploring products and they’ll show up here.
+            </p>
+          </div>
+        ) : recentlyViewData.length >= 4 ? (
+          // 🔹 Carousel view (4 per row)
+          <Slider {...settings}>
+            {recentlyViewData.map((i) => (
+              <div key={i._id} className="p-2">
+                <img
+                  src={
+                    i?.product?.variants[0]?.images[0]?.url || "/glasses.png"
+                  }
+                  alt={`Product ${i.product?.productName}`}
+                  className="w-full h-24 rounded-lg object-cover"
+                />
+              </div>
+            ))}
+          </Slider>
+        ) : (
+          // 🔹 Grid view (if less than 4)
+          <div className="grid grid-cols-4 gap-3">
+            {recentlyViewData.map((i) => (
               <img
                 key={i._id}
                 src={i?.product?.productImgURL}
-                alt={`Product ${i.product.productName}`}
+                alt={`Product ${i.product?.productName}`}
                 className="w-full h-24 rounded-lg object-cover"
               />
-            ))
-          ) : (
-            <div className="col-span-4 flex flex-col items-center justify-center p-6 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-10 h-10 text-gray-400 mb-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4.5c-4.418 0-8 3.134-8 7s3.582 7 8 7 8-3.134 8-7-3.582-7-8-7z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 11.25a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              <p className="text-gray-600 font-medium text-lg mb-1">
-                No Recently Viewed
-              </p>
-              <p className="text-gray-500 text-sm text-center">
-                Start exploring products and they’ll show up here.
-              </p>
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
       <div className="px-4 mb-4 pb-24">
         <div className="flex justify-between items-center mb-2 mt-5">

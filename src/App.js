@@ -43,7 +43,7 @@ function App() {
     if (localStorage.getItem("accountUserToken")) {
       let validToken = localStorage.getItem("accountUserToken");
       // https://eyefit-shop-800355ab3f46.herokuapp.com
-      const data = await fetch("https://eyefit-shop-800355ab3f46.herokuapp.comhttps://eyefit-shop-800355ab3f46.herokuapp.com/api/users/validate", {
+      const data = await fetch("https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/validate", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

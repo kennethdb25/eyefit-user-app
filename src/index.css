@@ -41,11 +41,11 @@ canvas {
 }
 
 /* Hover */
-.custom-tabs .ant-tabs-tab:hover {
+/* .custom-tabs .ant-tabs-tab:hover {
   background: #e6f4ff;
   border: 1px solid #91caff;
   color: #1677ff;
-}
+} */
 
 /* Active */
 .custom-tabs .ant-tabs-tab-active {

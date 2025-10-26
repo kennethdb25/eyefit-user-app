@@ -18,16 +18,13 @@ export default function Register() {
     }
     setLoading(true);
     //
-    const response = await fetch(
-      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      }
-    );
+    const response = await fetch("/api/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(values),
+    });
     const res = await response.json();
 
     if (res.success) {

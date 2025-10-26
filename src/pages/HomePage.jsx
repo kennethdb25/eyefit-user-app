@@ -33,10 +33,7 @@ export default function HomePage(props) {
 
   const fetchData = async () => {
     try {
-      const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/product`
-      );
-      // const res = await fetch(`https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/product`);
+      const res = await fetch(`/api/user/product`);
       const json = await res.json();
       console.log(json);
       setData(json.body || []); // assuming your API responds with { body: [...] }
@@ -48,7 +45,7 @@ export default function HomePage(props) {
   const fetchRecommendedData = async () => {
     try {
       const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/recommended-product?q=${location.state?.faceShape}`
+        `/api/user/recommended-product?q=${location.state?.faceShape}`
       );
       const json = await res.json();
       console.log(json);
@@ -63,10 +60,8 @@ export default function HomePage(props) {
       setInitiateSearch(true);
       const fetchSearchData = async () => {
         try {
-          const res = await fetch(
-            `https://eyefit-shop-800355ab3f46.herokuapp.com/api/product/search?q=${searchTerm}`
-          );
-          // const res = await fetch(`https://eyefit-shop-800355ab3f46.herokuapp.com/api/product/search?q=${searchTerm}`);
+          const res = await fetch(`/api/product/search?q=${searchTerm}`);
+          // const res = await fetch(`/api/product/search?q=${searchTerm}`);
           const json = await res.json();
           setProducts(json.body || []); // assuming your API responds with { body: [...] }
         } catch (error) {
@@ -91,17 +86,14 @@ export default function HomePage(props) {
       productId,
     };
 
-    const response = await fetch(
-      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/like",
-      {
-        // const response = await fetch("https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/like", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      }
-    );
+    const response = await fetch("/api/users/like", {
+      // const response = await fetch("/api/users/like", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
     const res = await response.json();
 
     if (res.success) {
@@ -118,17 +110,14 @@ export default function HomePage(props) {
       productId,
     };
 
-    const response = await fetch(
-      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/view",
-      {
-        // const response = await fetch("https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/view", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      }
-    );
+    const response = await fetch("/api/users/view", {
+      // const response = await fetch("/api/users/view", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
     const res = await response.json();
 
     if (res.success) {
@@ -149,17 +138,14 @@ export default function HomePage(props) {
       return messageApi.info("Please select a color!");
     }
 
-    const response = await fetch(
-      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/checkout",
-      {
-        // const response = await fetch("https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      }
-    );
+    const response = await fetch("/api/user/checkout", {
+      // const response = await fetch("/api/user/checkout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
     const res = await response.json();
 
     if (res.success) {

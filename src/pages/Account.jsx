@@ -122,8 +122,8 @@ const Account = (props) => {
     dots: false,
     infinite: false,
     speed: 500,
-    slidesToShow: 4, // show 4 images at once
-    slidesToScroll: 4, // move 4 images per click
+    slidesToShow: 4,
+    slidesToScroll: 4,
     nextArrow: (
       <button className="absolute right-0 z-10 p-2 bg-transparent">➡️</button>
     ),
@@ -135,7 +135,7 @@ const Account = (props) => {
   const fetchAppointmentData = async () => {
     try {
       const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/appointments?email=${loginData?.body?.email}`
+        `/api/users/appointments?email=${loginData?.body?.email}`
       );
       const json = await res.json();
       setAppointments(json.body || []);
@@ -159,17 +159,13 @@ const Account = (props) => {
     }
 
     try {
-      // const response = await fetch(`https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointments/status/${id}`, {
-      const response = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointments/status/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ status }),
-        }
-      );
+      const response = await fetch(`/api/appointments/status/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      });
 
       const data = await response.json();
 
@@ -187,18 +183,14 @@ const Account = (props) => {
   const handleLogout = async () => {
     console.log("Logout clicked");
     let token = localStorage.getItem("accountUserToken");
-    // const res = await fetch("https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/logout", {
-    const res = await fetch(
-      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/logout",
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token,
-          Accept: "application/json",
-        },
-      }
-    );
+    const res = await fetch("/api/users/logout", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token,
+        Accept: "application/json",
+      },
+    });
 
     const data = await res.json();
 
@@ -224,7 +216,6 @@ const Account = (props) => {
         transition: Bounce,
       });
     }
-    // Add your logout logic here
     handleCloseModal();
   };
 
@@ -292,7 +283,7 @@ const Account = (props) => {
     try {
       const res = await fetch(
         //
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/orders?userId=${loginData?.body?._id}`
+        `/api/users/orders?userId=${loginData?.body?._id}`
       );
       const json = await res.json();
       setOrderData(json.body || []);
@@ -304,9 +295,7 @@ const Account = (props) => {
   const fetchLikeData = async () => {
     try {
       //
-      const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/like?userId=${loginData?.body?._id}`
-      );
+      const res = await fetch(`/api/users/like?userId=${loginData?.body?._id}`);
       const json = await res.json();
       setLikeData(json.body || []);
     } catch (error) {
@@ -317,9 +306,7 @@ const Account = (props) => {
   const fetchRecentlyViewData = async () => {
     try {
       //
-      const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/view?userId=${loginData?.body?._id}`
-      );
+      const res = await fetch(`/api/users/view?userId=${loginData?.body?._id}`);
       const json = await res.json();
       setRecentlyViewData(json.body || []);
     } catch (error) {

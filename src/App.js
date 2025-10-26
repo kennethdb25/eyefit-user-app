@@ -42,8 +42,7 @@ function App() {
   const LoginValidation = async () => {
     if (localStorage.getItem("accountUserToken")) {
       let validToken = localStorage.getItem("accountUserToken");
-      // https://eyefit-shop-800355ab3f46.herokuapp.com
-      const data = await fetch("https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/validate", {
+      const data = await fetch("/api/users/validate", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -72,11 +71,10 @@ function App() {
   const fetchData = async () => {
     try {
       const res = await fetch(
-        // https://eyefit-shop-800355ab3f46.herokuapp.com
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/get-checkout?userId=${loginData?.body?._id}`
+        `/api/user/get-checkout?userId=${loginData?.body?._id}`
       );
       const json = await res.json();
-      setCartItems(json.body || []); // assuming your API responds with { body: [...] }
+      setCartItems(json.body || []);
     } catch (error) {
       console.error("Fetch failed:", error);
     }

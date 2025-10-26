@@ -71,15 +71,11 @@ export default function CartPage(props) {
 
   const updateQuantityAPI = async (id, quantity) => {
     try {
-      await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/checkout/${id}/quantity`,
-        {
-          // await fetch(`https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/checkout/${id}/quantity`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ quantity }),
-        }
-      );
+      await fetch(`/api/user/checkout/${id}/quantity`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity }),
+      });
     } catch (error) {
       console.error("Error updating quantity:", error);
     }
@@ -131,7 +127,7 @@ export default function CartPage(props) {
   };
 
   const handleEditClick = () => {
-    setTempAddress(address); // Load current address into modal
+    setTempAddress(address);
     setIsModalVisible(true);
   };
 
@@ -141,7 +137,7 @@ export default function CartPage(props) {
     try {
       setLoading(true);
       const response = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/address/${loginData?.body?._id}`,
+        `/api/users/address/${loginData?.body?._id}`,
         {
           method: "PUT",
           headers: {
@@ -170,14 +166,11 @@ export default function CartPage(props) {
     if (paymentMethod === "card") {
       try {
         // 1. Create Payment Intent (backend)
-        const intentRes = await fetch(
-          "https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/create-payment-intent",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount: orderTotal * 100 }), // convert pesos → centavos
-          }
-        );
+        const intentRes = await fetch("/api/user/create-payment-intent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: orderTotal * 100 }), // convert pesos → centavos
+        });
         const intentData = await intentRes.json();
         const intentId = intentData.body?.data?.id;
 
@@ -249,15 +242,12 @@ export default function CartPage(props) {
             return messageApi.info("No order in Cart");
           }
           console.log(intentData?.body?.data);
-          const response = await fetch(
-            "https://eyefit-shop-800355ab3f46.herokuapp.com/api/orders",
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(payload),
-            }
-          );
+          const response = await fetch("/api/orders", {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
           const res = await response.json();
 
           if (res.success) {
@@ -283,7 +273,7 @@ export default function CartPage(props) {
   const handleRemoveItem = async (checkoutId) => {
     try {
       const data = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/remove/checkout?checkoutId=${checkoutId}`,
+        `/api/user/remove/checkout?checkoutId=${checkoutId}`,
         {
           method: "DELETE",
         }
@@ -304,7 +294,7 @@ export default function CartPage(props) {
 
   const handleRemoveAllItem = async (toShow) => {
     const data = await fetch(
-      `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/remove/all/checkout?userId=${loginData?.body?._id}`,
+      `/api/user/remove/all/checkout?userId=${loginData?.body?._id}`,
       {
         method: "DELETE",
       }

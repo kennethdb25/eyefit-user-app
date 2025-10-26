@@ -17,7 +17,7 @@ const Notifications = () => {
   const fetchData = async () => {
     try {
       const res = await fetch(
-        `/api/user/notification?userId=${loginData?.body?._id}`
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/notification?userId=${loginData?.body?._id}`
       );
       const json = await res.json();
       setNotifications(json.body || []);
@@ -35,12 +35,15 @@ const Notifications = () => {
   const readNotification = async (id) => {
     try {
       //
-      const res = await fetch(`/api/user/notification?notificationId=${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const res = await fetch(
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/notification?notificationId=${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const json = await res.json();
 

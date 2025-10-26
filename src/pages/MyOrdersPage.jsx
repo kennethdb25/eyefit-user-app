@@ -50,11 +50,14 @@ function ReviewForm({ itemId, userId, onReviewAdded, onClose, fetchData }) {
     }
 
     try {
-      const res = await fetch(`/api/user/${itemId}/review`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/${itemId}/review`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       // Check if response is okay
       if (!res.ok) {
@@ -142,7 +145,7 @@ export default function MyOrdersPage() {
   const fetchData = async () => {
     try {
       const res = await fetch(
-        `/api/users/orders?userId=${loginData?.body?._id}`
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/orders?userId=${loginData?.body?._id}`
       );
       const json = await res.json();
       setData(json.body || []); // assuming your API responds with { body: [...] }
@@ -158,13 +161,16 @@ export default function MyOrdersPage() {
     }
 
     try {
-      const response = await fetch(`/api/orders/status/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status }),
-      });
+      const response = await fetch(
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/orders/status/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status }),
+        }
+      );
 
       const data = await response.json();
 

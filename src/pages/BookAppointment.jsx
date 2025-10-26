@@ -46,7 +46,9 @@ export default function BookAppointment() {
   // Fetch business appointment config
   const fetchConfig = async (company) => {
     try {
-      const res = await fetch(`/api/appointment-config/${company}`);
+      const res = await fetch(
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointment-config/${company}`
+      );
       const data = await res.json();
       setConfig(data.success ? data.body : null);
     } catch (err) {
@@ -58,7 +60,9 @@ export default function BookAppointment() {
   // Fetch all available businesses
   const fetchStoreData = async () => {
     try {
-      const res = await fetch(`/api/available/business`);
+      const res = await fetch(
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/available/business`
+      );
       const json = await res.json();
       setStoreData(json.body || []);
     } catch (error) {
@@ -70,7 +74,9 @@ export default function BookAppointment() {
   const fetchBookedSlots = async (company) => {
     if (!company) return;
     try {
-      const data = await fetch(`/api/validate/appointment?company=${company}`);
+      const data = await fetch(
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/validate/appointment?company=${company}`
+      );
       const res = await data.json();
 
       // Group by date
@@ -141,11 +147,14 @@ export default function BookAppointment() {
     values.time = selectedTime;
 
     try {
-      const response = await fetch("/api/appointments/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      });
+      const response = await fetch(
+        "https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointments/add",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(values),
+        }
+      );
       const res = await response.json();
       if (res.success) {
         messageApi.success("Appointment Requested!");

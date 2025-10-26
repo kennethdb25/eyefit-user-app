@@ -21,7 +21,6 @@ const Notifications = () => {
       );
       const json = await res.json();
       setNotifications(json.body || []);
-      console.error("Fetch failed:", error);
     } catch (error) {
       console.error("Fetch failed:", error);
     }

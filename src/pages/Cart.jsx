@@ -12,6 +12,7 @@ import {
   message,
   Tooltip,
   Popconfirm,
+  Rate,
 } from "antd";
 import {
   DeleteOutlined,
@@ -37,7 +38,47 @@ export default function CartPage(props) {
   const [loading, setLoading] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const [loadingOrderButton, setLoadingOrderButton] = useState(false);
+
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   const history = useNavigate();
+
+  const onHandleOpenModal = (item) => {
+    setSelectedProduct(item);
+  };
+
+  const onHandleUpdateToCart = async (product) => {
+    if (!selectedColor) {
+      messageApi.warning("Please select a color.");
+      return;
+    }
+    try {
+      const response = await fetch(
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/update/checkout/${product}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ color: selectedColor }),
+        }
+      );
+
+      console.log(response);
+
+      if (response.ok) {
+        setSelectedProduct(null);
+        setSelectedColor(null);
+        cartData();
+        messageApi.success(`Product color updated successfully`);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    console.log(product);
+  };
 
   const showModal = () => setIsModalOpen(true);
   const handleClose = () => {
@@ -54,20 +95,6 @@ export default function CartPage(props) {
     { name: "Amex", icon: <FaCcAmex className="w-12 h-8 text-green-500" /> },
     { name: "Paypal", icon: <FaCcPaypal className="w-12 h-8 text-blue-700" /> },
   ];
-
-  const checkTotal = async () => {
-    const withTotals = cartItems.map((p) => ({
-      ...p,
-      totalPrice: p.quantity ? p?.product.price * p.quantity : p?.product.price,
-    }));
-
-    const grandTotal = withTotals.reduce(
-      (acc, item) => acc + item.totalPrice,
-      0
-    );
-
-    setOrderTotal(grandTotal);
-  };
 
   const updateQuantityAPI = async (id, quantity) => {
     try {
@@ -118,10 +145,23 @@ export default function CartPage(props) {
       );
     }
   };
+  const checkTotal = async () => {
+    const withTotals = cartItems.map((p) => ({
+      ...p,
+      totalPrice: p.quantity ? p?.product.price * p.quantity : p?.product.price,
+    }));
+
+    const grandTotal = withTotals.reduce(
+      (acc, item) => acc + item.totalPrice,
+      0
+    );
+    setOrderTotal(grandTotal);
+  };
 
   const handleRadioChange = (e) => {
-    console.log("Selected value:", e.target.value);
-    setPaymentMethod(e.target.value);
+    const selected = e.target.value;
+    console.log("Selected value:", selected);
+    setPaymentMethod(selected);
   };
 
   const handleCheckOut = () => {
@@ -166,6 +206,7 @@ export default function CartPage(props) {
 
   const handlePlaceOrder = async () => {
     setLoadingOrderButton(true);
+    let intentData;
     if (paymentMethod === "card") {
       try {
         // 1. Create Payment Intent (backend)
@@ -177,7 +218,7 @@ export default function CartPage(props) {
             body: JSON.stringify({ amount: orderTotal * 100 }), // convert pesos → centavos
           }
         );
-        const intentData = await intentRes.json();
+        intentData = await intentRes.json();
         const intentId = intentData.body?.data?.id;
 
         // 2. Create Card Payment Method (frontend, public key)
@@ -231,51 +272,95 @@ export default function CartPage(props) {
         const finalData = await attachRes.json();
         console.log("Payment result:", finalData);
         messageApi.success("Payment successful!");
-
-        try {
-          const payload = {
-            userId: cartItems[0]?.user?._id || null, // Get userId from the first object
-            paymentMethod,
-            paymentDetails: intentData?.body?.data,
-            products: cartItems.map((item) => ({
-              productId: item.product._id,
-              quantity: parseInt(item.quantity) || 1,
-              color: item.color,
-            })),
-          };
-
-          if (!payload || cartItems.length === 0) {
-            return messageApi.info("No order in Cart");
-          }
-          console.log(intentData?.body?.data);
-          const response = await fetch(
-            "https://eyefit-shop-800355ab3f46.herokuapp.com/api/orders",
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(payload),
-            }
-          );
-          const res = await response.json();
-
-          if (res.success) {
-            messageApi.success("Order Placed Successfully!");
-            cartData();
-            handleRemoveAllItem(false);
-            setPaymentMethod("otc");
-          } else {
-            messageApi.error(
-              res?.error || res.message || "Something went wrong"
-            );
-          }
-        } finally {
-          setLoadingOrderButton(false);
-        }
+        createOrder(intentData);
       } catch (err) {
         console.error(err);
         alert("Payment failed");
       }
+    } else if (paymentMethod === "gcash" || paymentMethod === "grabpay") {
+      try {
+        handleRemoveAllItem(false);
+        const sourceRes = await fetch("https://api.paymongo.com/v1/sources", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: "Basic " + btoa("sk_test_WP1FKzGNZwVitiwi53116N7X"),
+          },
+          body: JSON.stringify({
+            data: {
+              attributes: {
+                amount: orderTotal * 100,
+                type: paymentMethod,
+                redirect: {
+                  success: `${window.location.origin}/payment-success`,
+                  failed: `${window.location.origin}/payment-failed`,
+                },
+              },
+            },
+          }),
+        });
+
+        const sourceData = await sourceRes.json();
+        console.log(sourceData);
+        const checkoutUrl =
+          sourceData?.data?.attributes?.redirect?.checkout_url;
+
+        if (checkoutUrl) {
+          window.location.href = checkoutUrl; // redirect to e-wallet page
+          createOrder(intentData);
+          return;
+        } else {
+          messageApi.error("Failed to create e-wallet source");
+        }
+      } catch (error) {
+        console.error(error);
+        messageApi.error("E-Wallet payment failed");
+      }
+    } else {
+      createOrder(intentData);
+    }
+  };
+
+  const createOrder = async (intentData) => {
+    try {
+      const payload = {
+        userId: cartItems[0]?.user?._id || null, // Get userId from the first object
+        paymentMethod,
+        paymentDetails:
+          paymentMethod === "card" ? intentData?.body?.data || "" : "",
+        products: cartItems.map((item) => ({
+          productId: item.product._id,
+          quantity: parseInt(item.quantity) || 1,
+          color: item.color,
+        })),
+      };
+
+      if (!payload || cartItems.length === 0) {
+        return messageApi.info("No order in Cart");
+      }
+      console.log(intentData?.body?.data);
+      const response = await fetch(
+        "https://eyefit-shop-800355ab3f46.herokuapp.com/api/orders",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+      const res = await response.json();
+
+      if (res.success) {
+        handleRemoveAllItem(false);
+        messageApi.success("Order Placed Successfully!");
+        cartData();
+        setPaymentMethod("otc");
+      } else {
+        messageApi.error(res?.error || res.message || "Something went wrong");
+      }
+    } finally {
+      setLoadingOrderButton(false);
     }
   };
 
@@ -374,9 +459,18 @@ export default function CartPage(props) {
               {cartItems.map((item, index) => (
                 <div
                   key={index}
-                  className="w-full bg-white rounded-2xl shadow-sm hover:shadow-md 
-                         transition-all duration-300 p-4 flex flex-col"
+                  className="relative w-full bg-white rounded-2xl shadow-sm hover:shadow-md 
+             transition-all duration-300 p-4 flex flex-col"
                 >
+                  {/* 🟩 Edit Button (Top-Right Corner) */}
+                  <button
+                    onClick={() => onHandleOpenModal(item)}
+                    className="absolute top-3 right-3 text-blue-600 hover:text-blue-800 
+               text-sm font-semibold transition"
+                  >
+                    Edit
+                  </button>
+
                   <div className="flex gap-4">
                     {/* Product Image */}
                     <div className="w-28 h-28 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden">
@@ -408,9 +502,15 @@ export default function CartPage(props) {
                         <p className="text-xs text-gray-500">
                           Stock: {item?.product.stocks}
                         </p>
-                        <p className="text-xs text-gray-500">
-                          Color: {item?.color.toUpperCase()}
-                        </p>
+                        <div className="text-xs text-gray-500">
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span>Color:</span>
+                            <div
+                              className="w-4 h-4 rounded-full border border-gray-300"
+                              style={{ backgroundColor: item?.color }}
+                            ></div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -504,6 +604,222 @@ export default function CartPage(props) {
           </>
         )}
       </div>
+
+      {selectedProduct && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          onClick={() => setSelectedProduct(null)}
+        >
+          <div
+            className="bg-white rounded-3xl w-11/12 max-w-md mx-auto relative animate-slide-up-center shadow-xl
+                       max-h-[90vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto px-6 pb-20 pt-6 custom-scroll">
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedProduct(null)}
+                className="sticky top-0 ml-auto text-gray-400 hover:text-black text-xl bg-white rounded-full p-1 z-10"
+              >
+                ✕
+              </button>
+
+              {/* Carousel Section */}
+              <div className="relative flex justify-center mb-4">
+                {(() => {
+                  const allImages =
+                    selectedProduct?.product?.variants?.flatMap(
+                      (v) => v.images
+                    ) || [];
+
+                  const prevImage = () =>
+                    setCurrentIndex((prev) =>
+                      prev === 0 ? allImages.length - 1 : prev - 1
+                    );
+                  const nextImage = () =>
+                    setCurrentIndex((prev) =>
+                      prev === allImages.length - 1 ? 0 : prev + 1
+                    );
+
+                  return (
+                    <div className="relative bg-gray-100 rounded-2xl p-4 shadow-inner w-60 h-60 flex items-center justify-center">
+                      {allImages.length > 0 ? (
+                        <img
+                          src={allImages[currentIndex].url}
+                          alt={`Product ${currentIndex}`}
+                          className="w-40 h-40 object-contain"
+                        />
+                      ) : (
+                        <img
+                          src={selectedProduct.productImgURL || "/glasses.png"}
+                          alt={selectedProduct.productName}
+                          className="w-40 h-40 object-contain"
+                        />
+                      )}
+
+                      {/* Left Arrow */}
+                      {allImages.length > 1 && (
+                        <button
+                          onClick={prevImage}
+                          className="absolute -left-12 top-1/2 transform -translate-y-1/2 bg-transparent p-2 rounded-full hover:bg-black/10"
+                        >
+                          ◀
+                        </button>
+                      )}
+
+                      {/* Right Arrow */}
+                      {allImages.length > 1 && (
+                        <button
+                          onClick={nextImage}
+                          className="absolute -right-12 top-1/2 transform -translate-y-1/2 bg-transparent p-2 rounded-full hover:bg-black/10"
+                        >
+                          ▶
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Product Info */}
+              <div className="space-y-3 border-t border-b border-gray-200 py-4">
+                <div>
+                  <h3 className="text-2xl font-extrabold text-gray-900 tracking-tight">
+                    {selectedProduct?.product?.brand}
+                  </h3>
+                  <p className="text-lg text-gray-500">
+                    {selectedProduct?.product?.model}
+                  </p>
+                </div>
+
+                <p className="text-3xl font-bold text-green-600">
+                  ₱{selectedProduct?.product?.price.toLocaleString()}
+                </p>
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm">
+                  <p className="text-gray-600">
+                    <span className="font-semibold text-gray-700">Stocks:</span>{" "}
+                    <span className="text-gray-800">
+                      {selectedProduct?.product?.stocks}
+                    </span>
+                  </p>
+                  <p className="text-gray-600">
+                    <span className="font-semibold text-gray-700">Shop:</span>{" "}
+                    {selectedProduct?.product?.company}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Rate
+                    className="text-yellow-400 text-lg"
+                    allowHalf
+                    value={
+                      selectedProduct?.product?.averageRating
+                        ? selectedProduct?.product?.averageRating
+                        : 0
+                    }
+                  />
+                  <span className="text-sm text-gray-500">{`${
+                    selectedProduct && selectedProduct?.product?.reviews
+                      ? selectedProduct?.product?.reviews.length
+                      : 0
+                  } Reviews`}</span>
+                </div>
+              </div>
+
+              {/* Colors */}
+              <div className="mb-6">
+                <p className="text-sm font-semibold text-gray-700 mb-2">
+                  Available Colors
+                </p>
+                <div className="flex gap-3">
+                  {selectedProduct?.product?.variants &&
+                  selectedProduct?.product?.variants.length > 0 ? (
+                    <>
+                      {selectedProduct?.product?.variants.map((variant) => (
+                        <div
+                          key={variant._id}
+                          className={`w-8 h-8 rounded-full border-2 cursor-pointer ${
+                            selectedColor === variant?.product?.color
+                              ? "border-green-500 scale-110"
+                              : "border-gray-300"
+                          } transition-transform duration-200`}
+                          style={{ backgroundColor: variant.color }}
+                          onClick={() => setSelectedColor(variant?.color)}
+                        />
+                      ))}
+                    </>
+                  ) : (
+                    <p className="text-xs text-gray-500 mb-2">
+                      No Available Color
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Checkout Button */}
+              <button
+                onClick={() => onHandleUpdateToCart(selectedProduct._id)}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold text-lg shadow-md"
+              >
+                <ShoppingCartOutlined className="mr-2" /> UPDATE TO CART
+              </button>
+
+              {/* Reviews Section */}
+              {selectedProduct?.product?.reviews &&
+                selectedProduct?.product.reviews.length > 0 && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-bold text-gray-800 mb-3">
+                      Customer Reviews
+                    </h3>
+
+                    <div className="space-y-4 max-h-60 overflow-y-auto pr-1 custom-scroll">
+                      {selectedProduct?.product.reviews.map((review, idx) => (
+                        <div
+                          key={idx}
+                          className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200 shadow-sm"
+                        >
+                          {/* Reviewer Info */}
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
+                              {review?.user?.name?.charAt(0) || "U"}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-800">
+                                {review?.user?.name || "Anonymous"}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {new Date(
+                                  review.createdAt
+                                ).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Rating */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <Rate disabled defaultValue={review.rating} />
+                            <span className="text-sm font-medium text-gray-700">
+                              {review.rating} / 5
+                            </span>
+                          </div>
+
+                          {/* Comment */}
+                          <div className="bg-white rounded-lg border border-gray-100 p-3 shadow-inner">
+                            <p className="text-gray-700 text-sm italic leading-relaxed">
+                              “{review.comment}”
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Checkout Modal */}
       <Modal
@@ -657,8 +973,7 @@ export default function CartPage(props) {
                 <Radio value="otc">Over the counter</Radio>
                 <Radio value="cod">Cash on Delivery</Radio>
                 <Radio value="card">Credit / Debit Card</Radio>
-                {/* <Radio value="gcash">GCash</Radio>
-                <Radio value="grabpay">GrabPay</Radio> */}
+                <Radio value="gcash">GCash</Radio>
               </Radio.Group>
             </Card>
           </div>

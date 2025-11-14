@@ -1,17 +1,12 @@
 import React from "react";
-import { Home, Bell, User, ShoppingCart } from "lucide-react";
+import { ScheduleOutlined } from "@ant-design/icons";
+import { Home, Bell, User, Calendar } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom"; // 👈 import useLocation
 import { LuScanFace } from "react-icons/lu";
 
-const Navigation = ({ cartItems, fetchData }) => {
+const Navigation = ({ fetchData }) => {
   const history = useNavigate();
   const location = useLocation(); // 👈 get current route
-  const cartCount = cartItems.length;
-
-  const handleChangeToCartPath = () => {
-    fetchData();
-    history("/cart");
-  };
 
   // Utility to check if route is active
   const isActive = (path) => location.pathname === path;
@@ -71,17 +66,12 @@ const Navigation = ({ cartItems, fetchData }) => {
 
         {/* Cart */}
         <button
-          onClick={handleChangeToCartPath}
+          onClick={() => history("/appointment")}
           className={`flex flex-col items-center relative ${
-            isActive("/cart") ? "text-green-600 font-bold" : "text-black"
+            isActive("/appointment") ? "text-green-600 font-bold" : "text-black"
           }`}
         >
-          <ShoppingCart className="w-6 h-6" />
-          {cartCount > 0 && (
-            <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
-              {cartCount}
-            </span>
-          )}
+          <Calendar className="w-6 h-6" />
         </button>
       </div>
     </div>

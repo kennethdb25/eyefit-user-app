@@ -100,7 +100,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Login LoginValidation={LoginValidation} />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/home" element={<HomePage cartData={fetchData} />} />
+            <Route path="/home" element={<HomePage cartData={fetchData} cartItems={cartItems} />} />
             <Route path="/cart" element={<Cart cartItems={cartItems} setCartItems={setCartItems} cartData={fetchData} />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/facescan" element={<FaceScan />} />

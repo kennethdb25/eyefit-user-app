@@ -236,15 +236,18 @@ const Account = (props) => {
             {appt.company}
           </h4>
           <p className="text-sm text-gray-600">
-            {appt.customerName} • {appt.contact}
+            {appt.customerFirstName} {appt.customerMiddleName}{" "}
+            {appt.customerLastName}
           </p>
-          <p className="text-sm text-gray-600">{appt.email}</p>
+          <p className="text-sm text-gray-600">
+            {appt.email} • {appt.contact}
+          </p>
         </div>
         <span
           className={`text-xs px-2 py-1 rounded-full font-medium ${
             appt.status === "Pending"
               ? "bg-yellow-100 text-yellow-700"
-              : appt.status === "Completed"
+              : appt.status === "Accepted"
               ? "bg-green-100 text-green-700"
               : "bg-red-100 text-red-700"
           }`}
@@ -440,7 +443,49 @@ const Account = (props) => {
           </Link>
         </div>
       </div>
+      <div className="px-4 mb-4 pb-4">
+        <div className="flex justify-between items-center mb-2 mt-5">
+          <h3 className="font-semibold">My Appointments</h3>
+          {appointments.length > 2 && (
+            <button
+              onClick={showModal}
+              className="text-sm text-green-600 hover:underline"
+            >
+              View More &gt;
+            </button>
+          )}
+        </div>
 
+        {appointments.length > 0 ? (
+          <div className="space-y-3">
+            {appointments.slice(0, 2).map(renderCard)}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center p-6 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-10 h-10 text-gray-400 mb-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10m-12 8h14a2 2 0 002-2V7a2 2 0 
+      00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
+            </svg>
+            <p className="text-gray-600 font-medium text-lg mb-1">
+              No Appointments
+            </p>
+            <p className="text-gray-500 text-sm text-center">
+              You don’t have any scheduled appointments yet.
+            </p>
+          </div>
+        )}
+      </div>
       {/* Likes Section */}
       <div className="px-4 mb-4">
         {/* Likes Section */}
@@ -488,7 +533,7 @@ const Account = (props) => {
       </div>
 
       {/* Recently Viewed Section */}
-      <div className="px-4 mb-4">
+      <div className="px-4 mb-10 pb-10">
         <div className="flex justify-start items-center mb-2 mt-5">
           <h3 className="font-semibold mr-1">Recently Viewed</h3>
           <EyeFilled className="text-blue-500 text-xl" />
@@ -553,49 +598,7 @@ const Account = (props) => {
           </div>
         )}
       </div>
-      <div className="px-4 mb-4 pb-24">
-        <div className="flex justify-between items-center mb-2 mt-5">
-          <h3 className="font-semibold">My Appointments</h3>
-          {appointments.length > 2 && (
-            <button
-              onClick={showModal}
-              className="text-sm text-green-600 hover:underline"
-            >
-              View More &gt;
-            </button>
-          )}
-        </div>
 
-        {appointments.length > 0 ? (
-          <div className="space-y-3">
-            {appointments.slice(0, 2).map(renderCard)}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center p-6 rounded-xl bg-gray-50 border border-gray-200 shadow-sm">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-10 h-10 text-gray-400 mb-3"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10m-12 8h14a2 2 0 002-2V7a2 2 0 
-      00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
-            <p className="text-gray-600 font-medium text-lg mb-1">
-              No Appointments
-            </p>
-            <p className="text-gray-500 text-sm text-center">
-              You don’t have any scheduled appointments yet.
-            </p>
-          </div>
-        )}
-      </div>
       {/* Modal for all appointments */}
       <Modal
         title="All Appointments"

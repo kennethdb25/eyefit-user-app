@@ -23,6 +23,18 @@ const { Title } = Typography;
 const { Option } = Select;
 const { TextArea } = Input;
 
+const requiredFields = [
+  "firstName",
+  "lastName",
+  "store",
+  "date",
+  "time",
+  "gender",
+  "phone",
+  "address",
+  "description",
+];
+
 export default function BookAppointment() {
   const { loginData } = useContext(LoginContext);
   const [messageApi, contextHolder] = message.useMessage();
@@ -34,6 +46,50 @@ export default function BookAppointment() {
   const [selectedTime, setSelectedTime] = useState(null);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [config, setConfig] = useState(null);
+
+  const [disabled, setDisabled] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Helper: returns true if a value should be considered "empty"
+  const isEmptyValue = (val) => {
+    if (val === undefined || val === null) return true;
+    if (typeof val === "string" && val.trim() === "") return true;
+    // AntD DatePicker returns a moment/dayjs object — treat as empty if falsy
+    // For arrays (eg. multiple select), treat empty array as empty
+    if (Array.isArray(val) && val.length === 0) return true;
+    return false;
+  };
+
+  const checkFormValidity = () => {
+    // 1) If any field has validation errors -> invalid
+    const fieldsError = form.getFieldsError();
+    const hasErrors = fieldsError.some((f) => f.errors && f.errors.length > 0);
+    if (hasErrors) {
+      setDisabled(true);
+      return;
+    }
+
+    // 2) Ensure all required fields have non-empty values
+    const allValues = form.getFieldsValue(requiredFields);
+    const anyEmptyRequired = requiredFields.some((name) => {
+      const val = allValues[name];
+      return isEmptyValue(val);
+    });
+
+    setDisabled(anyEmptyRequired);
+  };
+
+  // Initial check on mount (in case initialValues are provided)
+  useEffect(() => {
+    checkFormValidity();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Called on any value change
+  const onValuesChange = (_changedValues, _allValues) => {
+    // small microtask to ensure AntD updates errors before we check (works around timing)
+    setTimeout(() => checkFormValidity(), 0);
+  };
 
   const currentUser = {
     name: loginData?.body?.name,
@@ -114,16 +170,11 @@ export default function BookAppointment() {
 
   const availableTime =
     selectedDate && config
-      ? generateTimeSlots(
-          config.workingHours.start,
-          config.workingHours.end
-        ).filter(
-          (slot) =>
-            !(bookedSlots[selectedDate.format("YYYY-MM-DD")] || []).includes(
-              slot
-            )
-        )
+      ? generateTimeSlots(config.workingHours.start, config.workingHours.end)
       : [];
+
+  const bookedForSelectedDate =
+    bookedSlots[selectedDate?.format("YYYY-MM-DD")] || [];
 
   const disableDates = (current) => {
     if (!config) return current.isBefore(dayjs(), "day");
@@ -165,6 +216,8 @@ export default function BookAppointment() {
     } catch (err) {
       console.error(err);
       messageApi.error("Something went wrong");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -190,12 +243,9 @@ export default function BookAppointment() {
             layout="vertical"
             form={form}
             onFinish={onFinish}
+            onValuesChange={onValuesChange}
             initialValues={{
-              name: currentUser?.name,
-              gender: currentUser?.gender,
               email: currentUser?.email,
-              phone: currentUser?.phone,
-              address: currentUser?.address,
             }}
             className="space-y-4"
           >
@@ -229,10 +279,12 @@ export default function BookAppointment() {
               <DatePicker
                 format="YYYY-MM-DD"
                 disabledDate={disableDates}
-                onChange={(date) => setSelectedDate(date)}
+                onChange={(date) => setSelectedDate(date)} // your existing handler
                 className="w-full"
                 dateRender={(current) => {
                   const formatted = current.format("YYYY-MM-DD");
+                  const isSelected =
+                    selectedDate && current.isSame(selectedDate, "day"); // ✅ check selected date
 
                   // RED for exceptions
                   if (config?.exceptions?.includes(formatted)) {
@@ -242,6 +294,9 @@ export default function BookAppointment() {
                           border: "1px solid red",
                           borderRadius: "50%",
                           color: "red",
+                          backgroundColor: isSelected
+                            ? "#ffcccc"
+                            : "transparent", // highlight if selected
                         }}
                       >
                         {current.date()}
@@ -271,6 +326,9 @@ export default function BookAppointment() {
                             border: "1px solid green",
                             borderRadius: "50%",
                             color: "green",
+                            backgroundColor: isSelected
+                              ? "#a7f3d0"
+                              : "transparent",
                           }}
                         >
                           {current.date()}
@@ -279,7 +337,17 @@ export default function BookAppointment() {
                     }
                   }
 
-                  return current.date();
+                  return (
+                    <div
+                      style={{
+                        borderRadius: "50%",
+                        backgroundColor: isSelected ? "#bae6fd" : "transparent",
+                        color: isSelected ? "black" : "inherit",
+                      }}
+                    >
+                      {current.date()}
+                    </div>
+                  );
                 }}
               />
             </Form.Item>
@@ -298,9 +366,18 @@ export default function BookAppointment() {
                 style={{ width: "100%", marginBottom: 20 }}
               >
                 {availableTime.length > 0 ? (
-                  availableTime.map((time) => (
-                    <Option key={time}>{time}</Option>
-                  ))
+                  availableTime.map((time) => {
+                    const isBooked = bookedForSelectedDate.includes(time);
+                    return (
+                      <Select.Option
+                        key={time}
+                        value={time}
+                        disabled={isBooked}
+                      >
+                        {time} {isBooked && "(Booked)"}
+                      </Select.Option>
+                    );
+                  })
                 ) : (
                   <Option disabled>No Available Time</Option>
                 )}
@@ -313,14 +390,40 @@ export default function BookAppointment() {
                 Personal Information
               </h3>
               <Form.Item
-                label="Full Name"
-                name="name"
+                label="First Name"
+                name="firstName"
                 rules={[
-                  { required: true, message: "Please enter the full name" },
+                  { required: true, message: "Please enter the first name" },
                   { max: 40, message: "Name can not exceed 40 characters" },
                 ]}
               >
-                <Input placeholder="Jane Smith" className="bg-green-100" />
+                <Input
+                  placeholder="Enter First Name"
+                  className="bg-green-100"
+                />
+              </Form.Item>
+              <Form.Item
+                label="Middle Name"
+                name="middleName"
+                rules={[
+                  { message: "Please enter the middle name" },
+                  { max: 40, message: "Name can not exceed 40 characters" },
+                ]}
+              >
+                <Input
+                  placeholder="Enter Middle Name"
+                  className="bg-green-100"
+                />
+              </Form.Item>
+              <Form.Item
+                label="Last Name"
+                name="lastName"
+                rules={[
+                  { required: true, message: "Please enter the last name" },
+                  { max: 40, message: "Name can not exceed 40 characters" },
+                ]}
+              >
+                <Input placeholder="Enter Last Name" className="bg-green-100" />
               </Form.Item>
               <Form.Item
                 label="Gender"
@@ -329,16 +432,14 @@ export default function BookAppointment() {
                   { required: true, message: "Please select your gender" },
                 ]}
               >
-                <Select placeholder="Select Gender" className="bg-green-100">
-                  <Option value="male" className="bg-green-100">
-                    Male
-                  </Option>
-                  <Option value="female" className="bg-green-100">
-                    Female
-                  </Option>
-                  <Option value="other" className="bg-green-100">
-                    Other
-                  </Option>
+                <Select
+                  placeholder="Select Gender"
+                  className="custom-select bg-green-100"
+                  popupClassName="bg-green-50" // dropdown background
+                >
+                  <Option value="male">Male</Option>
+                  <Option value="female">Female</Option>
+                  <Option value="other">Other</Option>
                 </Select>
               </Form.Item>
               <Form.Item label="Email" name="email">
@@ -357,14 +458,16 @@ export default function BookAppointment() {
                 ]}
               >
                 <Input
-                  className="bg-green-100"
-                  addonBefore="+63"
+                  addonBefore={
+                    <span className="bg-green-100 text-gray px-3 py-1 rounded-l-md">
+                      +63
+                    </span>
+                  }
+                  className="!bg-green-100 rounded-l-none"
                   maxLength={10}
                   placeholder="9XXXXXXXXX"
                   onKeyPress={(e) => {
-                    if (!/[0-9]/.test(e.key)) {
-                      e.preventDefault(); // block non-numeric
-                    }
+                    if (!/[0-9]/.test(e.key)) e.preventDefault();
                   }}
                 />
               </Form.Item>
@@ -375,14 +478,21 @@ export default function BookAppointment() {
                   { required: true, message: "Please add your address!" },
                 ]}
               >
-                <Input className="bg-green-100" />
+                <Input
+                  placeholder="Enter your complete address"
+                  className="bg-green-100"
+                />
               </Form.Item>
               <Form.Item
                 label="Description"
                 name="description"
                 rules={[{ required: true, message: "Please add description!" }]}
               >
-                <TextArea rows={3} className="bg-green-100" />
+                <TextArea
+                  placeholder="Enter your description of the appointment"
+                  rows={3}
+                  className="bg-green-100"
+                />
               </Form.Item>
             </div>
 
@@ -391,7 +501,13 @@ export default function BookAppointment() {
               <Button
                 type="primary"
                 htmlType="submit"
-                className="w-full bg-green-500 hover:bg-green-600 border-none rounded-full"
+                disabled={disabled || submitting}
+                loading={submitting}
+                className={`w-full rounded-full border-none ${
+                  disabled
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-green-500 hover:bg-green-600"
+                }`}
               >
                 Done
               </Button>

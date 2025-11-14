@@ -6,7 +6,6 @@ import {
   HeartOutlined,
   LeftOutlined,
   RightOutlined,
-  ScheduleOutlined,
   StarOutlined,
   InboxOutlined,
 } from "@ant-design/icons";
@@ -29,7 +28,7 @@ export default function HomePage(props) {
   const containerRef = useRef(null);
   const history = useNavigate();
   const location = useLocation();
-  const { cartData } = props;
+  const { cartData, cartItems } = props;
 
   const fetchData = async () => {
     try {
@@ -196,15 +195,6 @@ export default function HomePage(props) {
           className="w-28 md:w-36 h-auto mb-4"
         />
         <div className="flex items-center justify-between w-full max-w-2xl gap-3 px-4">
-          {/* Book Appointment Button */}
-          <button
-            onClick={() => history("/appointment")}
-            className="bg-green-600 hover:bg-green-700 text-white text-sm md:text-base font-semibold py-2 px-4 rounded-lg shadow transition"
-          >
-            <ScheduleOutlined className="text-lg mr-1" />
-            SET AN APPOINTMENT
-          </button>
-
           {/* Search Icon/Input */}
           <div ref={containerRef} className="flex-1">
             {!showInput ? (
@@ -225,6 +215,20 @@ export default function HomePage(props) {
               />
             )}
           </div>
+          {/* Book Appointment Button */}
+          <button
+            onClick={() => history("/cart")}
+            className="relative bg-green-600 hover:bg-green-700 text-white text-sm md:text-base font-semibold py-2 px-4 rounded-lg shadow transition"
+          >
+            {/* Badge Count */}
+            {cartItems.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                {cartItems.length}
+              </span>
+            )}
+            <ShoppingCartOutlined className="text-lg mr-1" />
+            Cart Items
+          </button>
         </div>
       </div>
 

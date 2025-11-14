@@ -48,18 +48,34 @@ const FaceShapeDetector = () => {
   const [shape, setShape] = useState("Detecting...");
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [scanTrigger, setScanTrigger] = useState(0);
+  // const [scanTrigger, setScanTrigger] = useState(0);
   const history = useNavigate();
 
   useEffect(() => {
     let mounted = true;
-
-    const loadScriptAndModels = async () => {
-      if (!window?.faceapi) {
-        const s = document.createElement("script");
-        s.src = "https://unpkg.com/face-api.js/dist/face-api.min.js";
-        s.crossOrigin = "anonymous";
-        s.onload = async () => {
+    setTimeout(() => {
+      const loadScriptAndModels = async () => {
+        if (!window?.faceapi) {
+          const s = document.createElement("script");
+          s.src = "https://unpkg.com/face-api.js/dist/face-api.min.js";
+          s.crossOrigin = "anonymous";
+          s.onload = async () => {
+            try {
+              await loadModels();
+              setTimeout(() => {
+                startVideo();
+              }, 2000);
+            } catch (err) {
+              console.error(err);
+              setStatus("Error loading models");
+            }
+          };
+          s.onerror = (e) => {
+            console.error("Failed to load face-api CDN", e);
+            setStatus("Failed to load face-api library");
+          };
+          document.body.appendChild(s);
+        } else {
           try {
             await loadModels();
             setTimeout(() => {
@@ -69,65 +85,49 @@ const FaceShapeDetector = () => {
             console.error(err);
             setStatus("Error loading models");
           }
-        };
-        s.onerror = (e) => {
-          console.error("Failed to load face-api CDN", e);
-          setStatus("Failed to load face-api library");
-        };
-        document.body.appendChild(s);
-      } else {
+        }
+      };
+
+      const loadModels = async () => {
+        setStatus("Loading models...");
+        const faceapi = window.faceapi;
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+        ]);
+        setStatus("Models loaded");
+      };
+
+      const startVideo = async () => {
+        setStatus("Starting camera...");
         try {
-          await loadModels();
-          setTimeout(() => {
-            startVideo();
-          }, 2000);
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "user" },
+          });
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+          setStatus("Camera started");
         } catch (err) {
-          console.error(err);
-          setStatus("Error loading models");
+          console.error("Camera error:", err);
+          setStatus("Camera access denied or not available");
         }
-      }
-    };
+      };
 
-    const loadModels = async () => {
-      setStatus("Loading models...");
-      const faceapi = window.faceapi;
-      await Promise.all([
-        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-      ]);
-      setStatus("Models loaded");
-    };
+      loadScriptAndModels();
 
-    const startVideo = async () => {
-      setStatus("Starting camera...");
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user" },
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+      return () => {
+        mounted = false;
+        // stop camera if needed
+        if (videoRef.current && videoRef.current.srcObject) {
+          const tracks = videoRef.current.srcObject.getTracks();
+          tracks.forEach((t) => t.stop());
         }
-        setStatus("Camera started");
-      } catch (err) {
-        console.error("Camera error:", err);
-        setStatus("Camera access denied or not available");
-      }
-    };
+      };
+    }, 5000);
+  }, []);
 
-    loadScriptAndModels();
-
-    return () => {
-      mounted = false;
-      // stop camera if needed
-      if (videoRef.current && videoRef.current.srcObject) {
-        const tracks = videoRef.current.srcObject.getTracks();
-        tracks.forEach((t) => t.stop());
-      }
-    };
-  }, [scanTrigger]);
-
-  // detection loop
-  useEffect(() => {
+  const TriggerScanningFace = async () => {
     let rafId;
     const faceapi = window.faceapi;
     const runDetection = async () => {
@@ -196,7 +196,7 @@ const FaceShapeDetector = () => {
 
     rafId = requestAnimationFrame(runDetection);
     return () => cancelAnimationFrame(rafId);
-  }, []);
+  };
 
   useEffect(() => {
     let frameId;
@@ -258,6 +258,16 @@ const FaceShapeDetector = () => {
             <p className="mt-2 text-xs text-gray-500">
               Tip: Center your face inside the oval guide for best detection
             </p>
+            <div className="mt-6 flex justify-center gap-4">
+              <button
+                className="px-4 py-2 bg-green-600 hover:bg-gray-700 text-white rounded-lg"
+                onClick={() => {
+                  TriggerScanningFace();
+                }}
+              >
+                Detect
+              </button>
+            </div>
           </div>
         </>
       )}
@@ -274,7 +284,13 @@ const FaceShapeDetector = () => {
         open={showModal}
         title="Detected Face Shape"
         footer={null}
-        onCancel={() => setShowModal(false)}
+        onCancel={() => {
+          setShowModal(false);
+
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }}
       >
         {shape !== "Unknown" ? (
           <div className="mt-4 text-center">
@@ -311,16 +327,18 @@ const FaceShapeDetector = () => {
           >
             Continue
           </button>
-
           <button
-            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
+            hidden={shape === "Unknown" ? true : false}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
             onClick={() => {
               setShowModal(false);
-              setShape("Detecting...");
-              setScanTrigger((prev) => prev + 1); // retrigger effect
+
+              setTimeout(() => {
+                window.location.reload();
+              }, 1000);
             }}
           >
-            Try Again
+            Cancel
           </button>
         </div>
       </Modal>

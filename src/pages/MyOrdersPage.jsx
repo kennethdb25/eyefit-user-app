@@ -193,7 +193,8 @@ export default function MyOrdersPage() {
     (item) =>
       (item.status === "Pending" &&
         (item.paymentMethod === "Cash on Delivery" ||
-          item.paymentMethod === "Debit/Credit Card")) ||
+          item.paymentMethod === "Debit/Credit Card" ||
+          item.paymentMethod === "Gcash")) ||
       item.status === "Processing"
   );
   const shipped = data.filter((item) => item.status === "Shipped");
@@ -282,12 +283,12 @@ export default function MyOrdersPage() {
         {/* Total */}
 
         <p className="text-sm text-gray-500 ml-3">
-          Payment Method: {order.paymentMethod}
+          Payment Method: {order?.paymentMethod}
         </p>
         <div
           className={`flex mt-5 ${
             (order.status === "Pending" &&
-              order.paymentMethod !== "Debit/Credit Card") ||
+              order?.paymentMethod !== "Debit/Credit Card") ||
             (order.status === "Completed" && !order.ratingStatus)
               ? "justify-between"
               : "justify-end"

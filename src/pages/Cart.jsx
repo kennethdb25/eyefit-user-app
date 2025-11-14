@@ -206,6 +206,19 @@ export default function CartPage(props) {
 
   const handlePlaceOrder = async () => {
     setLoadingOrderButton(true);
+    let previousCompany = null;
+
+    for (const item of cartItems) {
+      if (!previousCompany) {
+        previousCompany = item?.product?.company;
+      } else if (
+        item?.product?.company.toString() !== previousCompany.toString()
+      ) {
+        return messageApi.error(
+          "Unauthorized Transaction. Items must be from the same company"
+        );
+      }
+    }
     let intentData;
     if (paymentMethod === "card") {
       try {
@@ -280,6 +293,8 @@ export default function CartPage(props) {
     } else if (paymentMethod === "gcash" || paymentMethod === "grabpay") {
       try {
         handleRemoveAllItem(false);
+
+        createOrder(intentData);
         const sourceRes = await fetch("https://api.paymongo.com/v1/sources", {
           method: "POST",
           headers: {
@@ -290,6 +305,7 @@ export default function CartPage(props) {
             data: {
               attributes: {
                 amount: orderTotal * 100,
+                currency: "PHP",
                 type: paymentMethod,
                 redirect: {
                   success: `${window.location.origin}/payment-success`,
@@ -307,7 +323,6 @@ export default function CartPage(props) {
 
         if (checkoutUrl) {
           window.location.href = checkoutUrl; // redirect to e-wallet page
-          createOrder(intentData);
           return;
         } else {
           messageApi.error("Failed to create e-wallet source");
@@ -324,7 +339,7 @@ export default function CartPage(props) {
   const createOrder = async (intentData) => {
     try {
       const payload = {
-        userId: cartItems[0]?.user?._id || null, // Get userId from the first object
+        userId: loginData?.body?._id || null, // Get userId from the first object
         paymentMethod,
         paymentDetails:
           paymentMethod === "card" ? intentData?.body?.data || "" : "",

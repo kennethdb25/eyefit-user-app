@@ -227,7 +227,7 @@ export default function HomePage(props) {
               </span>
             )}
             <ShoppingCartOutlined className="text-lg mr-1" />
-            Cart Items
+            Cart
           </button>
         </div>
       </div>

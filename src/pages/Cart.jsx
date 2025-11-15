@@ -371,6 +371,8 @@ export default function CartPage(props) {
         messageApi.success("Order Placed Successfully!");
         cartData();
         setPaymentMethod("otc");
+
+        setIsModalOpen(false);
       } else {
         messageApi.error(res?.error || res.message || "Something went wrong");
       }
@@ -975,23 +977,28 @@ export default function CartPage(props) {
           ))}
 
           {/* Payment Method */}
-          <div className="mb-4">
-            <h4 className="font-semibold text-gray-600 text-sm mb-2 mt-4">
-              PAYMENT METHOD
-            </h4>
-            <Card className="rounded-xl shadow" bodyStyle={{ padding: "12px" }}>
-              <Radio.Group
-                value={paymentMethod}
-                onChange={handleRadioChange}
-                className="flex flex-col w-full gap-2"
+          {cartItems && cartItems.length > 0 ? (
+            <div className="mb-4">
+              <h4 className="font-semibold text-gray-600 text-sm mb-2 mt-4">
+                PAYMENT METHOD
+              </h4>
+              <Card
+                className="rounded-xl shadow"
+                bodyStyle={{ padding: "12px" }}
               >
-                <Radio value="otc">Over the counter</Radio>
-                <Radio value="cod">Cash on Delivery</Radio>
-                <Radio value="card">Credit / Debit Card</Radio>
-                <Radio value="gcash">GCash</Radio>
-              </Radio.Group>
-            </Card>
-          </div>
+                <Radio.Group
+                  value={paymentMethod}
+                  onChange={handleRadioChange}
+                  className="flex flex-col w-full gap-2"
+                >
+                  <Radio value="otc">Over the counter</Radio>
+                  <Radio value="cod">Cash on Delivery</Radio>
+                  <Radio value="card">Credit / Debit Card</Radio>
+                  <Radio value="gcash">GCash</Radio>
+                </Radio.Group>
+              </Card>
+            </div>
+          ) : null}
 
           {paymentMethod === "card" && (
             <div className="mt-4 bg-white rounded-xl shadow-md p-4 border border-gray-200 mb-5">

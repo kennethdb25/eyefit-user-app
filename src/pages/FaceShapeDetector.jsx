@@ -332,7 +332,7 @@ const FaceShapeDetector = () => {
             className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg"
             onClick={() => {
               setShowModal(false);
-
+              // check if you can retain the route after reload
               setTimeout(() => {
                 window.location.reload();
               }, 1000);

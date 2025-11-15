@@ -21,80 +21,278 @@ import {
   LeftOutlined,
   CameraOutlined,
 } from "@ant-design/icons";
-import { Modal, message, Popconfirm } from "antd";
+import { Modal, message, Popconfirm, Form, Input, Button } from "antd";
 import { LoginContext } from "../context/LoginContext";
 import { ToastContainer, toast, Bounce } from "react-toastify";
+import { motion } from "framer-motion";
 
 const AccountInformationModal = ({ open, onClose, user }) => {
+  const [openChangePass, setOpenChangePass] = useState(false);
+
+  return (
+    <>
+      <Modal
+        open={open}
+        footer={null}
+        closable={false}
+        width="100%"
+        style={{ top: 0, padding: 0 }}
+        styles={{ padding: 0 }}
+        className="max-w-md mx-auto"
+      >
+        <div className="flex flex-col h-screen bg-gray-50">
+          {/* Header */}
+          <div className="bg-green-200 py-4 flex items-center justify-between px-4 border-b">
+            <button onClick={onClose}>
+              <LeftOutlined className="text-lg" />
+            </button>
+            <h2 className="text-lg font-semibold">Account Information</h2>
+            <div className="w-6" /> {/* Spacer for symmetry */}
+          </div>
+
+          {/* Profile Photo */}
+          <div className="flex justify-center mt-6 relative">
+            <div className="w-24 h-24 bg-white border rounded-full flex items-center justify-center relative">
+              <img
+                src={user?.avatar || ""}
+                alt="profile"
+                className="w-full h-full rounded-full object-cover"
+              />
+              <button className="absolute bottom-1 right-1 bg-black text-white p-1 rounded-full">
+                <CameraOutlined className="text-sm" />
+              </button>
+            </div>
+          </div>
+
+          {/* Info List */}
+          <div className="mt-8 px-4 space-y-4">
+            <div className="flex justify-between items-center border-b pb-3">
+              <span className="text-gray-700">Full Name</span>
+              <span className="text-gray-900">{user?.name || "User Name"}</span>
+            </div>
+
+            <div className="flex justify-between items-center border-b pb-3">
+              <span className="text-gray-700">EyeFit ID</span>
+              <span className="text-gray-900">
+                {user?.eyefitId || "000000000"}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center border-b pb-3">
+              <span className="text-gray-700">Address</span>
+              <span className="text-gray-700">
+                {user?.address || "email@example.com"}
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center border-b pb-3">
+              <span className="text-gray-700">Email</span>
+              <span className="text-gray-900">
+                {user?.email || "email@example.com"}
+              </span>
+            </div>
+
+            <div
+              className="flex justify-between items-center border-b pb-3"
+              onClick={() => setOpenChangePass(true)}
+            >
+              <span className="text-gray-700">Change Password</span>
+              <span className="text-gray-900">&gt;</span>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      <ChangePasswordModal
+        open={openChangePass}
+        onClose={() => setOpenChangePass(false)}
+      />
+    </>
+  );
+};
+
+const InfoItem = ({ label, value }) => (
+  <div className="flex justify-between items-center border-b pb-3">
+    <span className="text-gray-700">{label}</span>
+    <span className="text-gray-900">{value || "---"}</span>
+  </div>
+);
+
+const ChangePasswordModal = ({ open, onClose, userId }) => {
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const [strength, setStrength] = useState(0);
+  const { loginData, setLoginData } = useContext(LoginContext);
+
+  const [messageApi, contextHolder] = message.useMessage();
+
+  const evaluateStrength = (value) => {
+    let score = 0;
+    if (value.length >= 6) score++;
+    if (/[A-Z]/.test(value)) score++;
+    if (/[0-9]/.test(value)) score++;
+    if (/[^A-Za-z0-9]/.test(value)) score++;
+    setStrength(score);
+  };
+
+  const handleSubmit = async (values) => {
+    console.log(values);
+    setLoading(true);
+
+    try {
+      const res = await fetch(
+        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/forgot-password/${loginData?.body?._id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            currentPassword: values.currentPassword,
+            newPassword: values.newPassword,
+            confirmPassword: values.confirmPassword,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      console.log(data);
+
+      if (!data.success) {
+        messageApi.error(data.message || "Error updating password");
+      } else {
+        messageApi.success("Password updated successfully!");
+        onClose();
+        form.resetFields();
+      }
+    } catch (err) {
+      messageApi.error("Network error. Try again.");
+    }
+
+    setLoading(false);
+  };
+
   return (
     <Modal
       open={open}
       footer={null}
       closable={false}
       width="100%"
-      style={{ top: 0, padding: 0 }}
-      styles={{ padding: 0 }}
       className="max-w-md mx-auto"
+      style={{ top: 0 }}
     >
-      <div className="flex flex-col h-screen bg-gray-50">
+      {contextHolder}
+      <motion.div
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.28 }}
+        className="h-screen bg-gray-50 flex flex-col"
+      >
         {/* Header */}
         <div className="bg-green-200 py-4 flex items-center justify-between px-4 border-b">
           <button onClick={onClose}>
             <LeftOutlined className="text-lg" />
           </button>
-          <h2 className="text-lg font-semibold">Account Information</h2>
-          <div className="w-6" /> {/* Spacer for symmetry */}
+          <h2 className="text-lg font-semibold">Change Password</h2>
+          <div className="w-6" />
         </div>
 
-        {/* Profile Photo */}
-        <div className="flex justify-center mt-6 relative">
-          <div className="w-24 h-24 bg-white border rounded-full flex items-center justify-center relative">
-            <img
-              src={user?.avatar || ""}
-              alt="profile"
-              className="w-full h-full rounded-full object-cover"
-            />
-            <button className="absolute bottom-1 right-1 bg-black text-white p-1 rounded-full">
-              <CameraOutlined className="text-sm" />
-            </button>
-          </div>
+        <div className="p-6 mt-4">
+          <Form form={form} layout="vertical" onFinish={handleSubmit}>
+            {/* Current */}
+            <Form.Item
+              label="Current Password"
+              name="currentPassword"
+              rules={[{ required: true, message: "Enter current password" }]}
+            >
+              <Input.Password />
+            </Form.Item>
+
+            {/* New */}
+            <Form.Item
+              label="New Password"
+              name="newPassword"
+              rules={[{ required: true, message: "Enter new password" }]}
+            >
+              <Input.Password
+                onChange={(e) => evaluateStrength(e.target.value)}
+              />
+            </Form.Item>
+
+            {/* Password Strength Meter */}
+            <PasswordStrengthBar strength={strength} />
+
+            {/* Confirm */}
+            <Form.Item
+              label="Confirm Password"
+              name="confirmPassword"
+              dependencies={["newPassword"]}
+              rules={[
+                { required: true, message: "Confirm your password" },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || value === getFieldValue("newPassword")) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject("Passwords do not match");
+                  },
+                }),
+              ]}
+            >
+              <Input.Password />
+            </Form.Item>
+
+            {/* Save Button */}
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              Update Password
+            </Button>
+
+            <Button className="w-full mt-3" onClick={onClose}>
+              Cancel
+            </Button>
+          </Form>
         </div>
-
-        {/* Info List */}
-        <div className="mt-8 px-4 space-y-4">
-          <div className="flex justify-between items-center border-b pb-3">
-            <span className="text-gray-700">Full Name</span>
-            <span className="text-gray-900">{user?.name || "User Name"}</span>
-          </div>
-
-          <div className="flex justify-between items-center border-b pb-3">
-            <span className="text-gray-700">EyeFit ID</span>
-            <span className="text-gray-900">
-              {user?.eyefitId || "000000000"}
-            </span>
-          </div>
-
-          <div className="flex justify-between items-center border-b pb-3">
-            <span className="text-gray-700">Address</span>
-            <span className="text-gray-700">
-              {user?.address || "email@example.com"}
-            </span>
-          </div>
-
-          <div className="flex justify-between items-center border-b pb-3">
-            <span className="text-gray-700">Email</span>
-            <span className="text-gray-900">
-              {user?.email || "email@example.com"}
-            </span>
-          </div>
-
-          <div className="flex justify-between items-center border-b pb-3">
-            <span className="text-gray-700">Change Password</span>
-            <span className="text-gray-900">&gt;</span>
-          </div>
-        </div>
-      </div>
+      </motion.div>
     </Modal>
+  );
+};
+
+/* ------------------------------------------
+   PASSWORD STRENGTH BAR COMPONENT
+------------------------------------------- */
+const PasswordStrengthBar = ({ strength }) => {
+  const colors = [
+    "bg-red-500",
+    "bg-orange-500",
+    "bg-yellow-500",
+    "bg-green-500",
+  ];
+
+  return (
+    <div className="mb-4">
+      <div className="flex gap-1">
+        {[0, 1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className={`h-2 w-1/4 rounded ${
+              i < strength ? colors[strength - 1] : "bg-gray-300"
+            }`}
+          ></div>
+        ))}
+      </div>
+
+      <p className="text-xs text-gray-600 mt-1">
+        {strength === 0 && "Too weak"}
+        {strength === 1 && "Weak"}
+        {strength === 2 && "Medium"}
+        {strength === 3 && "Strong"}
+        {strength === 4 && "Very strong"}
+      </p>
+    </div>
   );
 };
 
@@ -291,7 +489,6 @@ const Account = (props) => {
   const fetchData = async () => {
     try {
       const res = await fetch(
-        //
         `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/orders?userId=${loginData?.body?._id}`
       );
       const json = await res.json();
@@ -303,7 +500,6 @@ const Account = (props) => {
 
   const fetchLikeData = async () => {
     try {
-      //
       const res = await fetch(
         `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/like?userId=${loginData?.body?._id}`
       );
@@ -575,10 +771,8 @@ const Account = (props) => {
             {recentlyViewData.map((i) => (
               <div key={i._id} className="p-2">
                 <img
-                  src={
-                    i?.product?.variants[0]?.images[0]?.url || "/glasses.png"
-                  }
-                  alt={`Product ${i.product?.productName}`}
+                  src={i?.product?.variants[0]?.images[0]?.url}
+                  alt={`Product ${i.product.productName}`}
                   className="w-full h-24 rounded-lg object-cover"
                 />
               </div>
@@ -590,7 +784,7 @@ const Account = (props) => {
             {recentlyViewData.map((i) => (
               <img
                 key={i._id}
-                src={i?.product?.productImgURL}
+                src={i?.product?.variants[0]?.images[0]?.url}
                 alt={`Product ${i.product?.productName}`}
                 className="w-full h-24 rounded-lg object-cover"
               />

@@ -1,5 +1,4 @@
 import React from "react";
-import { ScheduleOutlined } from "@ant-design/icons";
 import { Home, Bell, User, Calendar } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom"; // 👈 import useLocation
 import { LuScanFace } from "react-icons/lu";

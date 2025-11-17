@@ -289,7 +289,8 @@ export default function MyOrdersPage() {
           className={`flex mt-5 ${
             (order.status === "Pending" &&
               order?.paymentMethod !== "Debit/Credit Card") ||
-            (order.status === "Completed" && !order.ratingStatus)
+            (order.status === "Completed" && !order.ratingStatus) ||
+            order.status === "Shipped"
               ? "justify-between"
               : "justify-end"
           }`}
@@ -314,6 +315,26 @@ export default function MyOrdersPage() {
                 </button>
               </Popconfirm>
             )}
+
+          {order.status === "Shipped" && (
+            <Popconfirm
+              title="Complete Order"
+              description="Are you sure to complete this order?"
+              okText="Yes"
+              cancelText="No"
+              onConfirm={() => handleUpdateStatus("Completed", order._id)}
+            >
+              <button
+                className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 
+                 bg-green-600 hover:bg-red-700 text-white font-semibold rounded-full 
+                 shadow-md transition-all duration-300 hover:shadow-lg active:scale-95 
+                 text-xs sm:text-sm md:text-base"
+              >
+                <CheckCircleOutlined className="text-lg" />
+                RECEIVED ORDER
+              </button>
+            </Popconfirm>
+          )}
 
           {order.status === "Completed" && !order.ratingStatus && (
             <button

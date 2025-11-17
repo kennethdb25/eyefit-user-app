@@ -772,7 +772,7 @@ const Account = (props) => {
               <div key={i._id} className="p-2">
                 <img
                   src={i?.product?.variants[0]?.images[0]?.url}
-                  alt={`Product ${i.product.productName}`}
+                  alt={`Product ${i?.product?.productName}`}
                   className="w-full h-24 rounded-lg object-cover"
                 />
               </div>

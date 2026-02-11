@@ -130,7 +130,7 @@ const ChangePasswordModal = ({ open, onClose, userId }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [strength, setStrength] = useState(0);
-  const { loginData, setLoginData } = useContext(LoginContext);
+  const { loginData } = useContext(LoginContext);
 
   const [messageApi, contextHolder] = message.useMessage();
 

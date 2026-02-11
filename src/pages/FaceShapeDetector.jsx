@@ -52,7 +52,6 @@ const FaceShapeDetector = () => {
   const history = useNavigate();
 
   useEffect(() => {
-    let mounted = true;
     setTimeout(() => {
       const loadScriptAndModels = async () => {
         if (!window?.faceapi) {
@@ -117,7 +116,6 @@ const FaceShapeDetector = () => {
       loadScriptAndModels();
 
       return () => {
-        mounted = false;
         // stop camera if needed
         if (videoRef.current && videoRef.current.srcObject) {
           const tracks = videoRef.current.srcObject.getTracks();
@@ -153,7 +151,7 @@ const FaceShapeDetector = () => {
         const detection = await faceapi
           .detectSingleFace(
             video,
-            new faceapi.TinyFaceDetectorOptions({ inputSize: 224 })
+            new faceapi.TinyFaceDetectorOptions({ inputSize: 224 }),
           )
           .withFaceLandmarks();
 

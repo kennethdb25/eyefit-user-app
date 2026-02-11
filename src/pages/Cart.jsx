@@ -20,12 +20,41 @@ import {
   ShoppingCartOutlined,
 } from "@ant-design/icons";
 import { FaCcVisa, FaCcMastercard, FaCcAmex, FaCcPaypal } from "react-icons/fa";
+import emailjs from "@emailjs/browser";
+
+function formatNow() {
+  const now = new Date();
+
+  const options = {
+    month: "long",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  };
+
+  const formatted = now.toLocaleString("en-US", options);
+
+  return formatted.replace(",", "");
+}
+
+function generateGCashRef(length = 13) {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let ref = "";
+
+  for (let i = 0; i < length; i++) {
+    ref += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  return ref;
+}
 
 export default function CartPage(props) {
   const { cartItems, setCartItems, cartData } = props;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [orderTotal, setOrderTotal] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState("otc"); // default value
+  const [paymentMethod, setPaymentMethod] = useState("cod"); // default value
   const [cardNumber, setCardNumber] = useState("");
   const [expMonth, setExpMonth] = useState("");
   const [expYear, setExpYear] = useState("");
@@ -56,14 +85,14 @@ export default function CartPage(props) {
     }
     try {
       const response = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/update/checkout/${product}`,
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/user/update/checkout/${product}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ color: selectedColor }),
-        }
+        },
       );
 
       console.log(response);
@@ -83,7 +112,7 @@ export default function CartPage(props) {
   const showModal = () => setIsModalOpen(true);
   const handleClose = () => {
     setIsModalOpen(false);
-    setPaymentMethod("otc");
+    setPaymentMethod("cod");
   };
 
   const acceptedCards = [
@@ -99,12 +128,12 @@ export default function CartPage(props) {
   const updateQuantityAPI = async (id, quantity) => {
     try {
       await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/checkout/${id}/quantity`,
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/user/checkout/${id}/quantity`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ quantity }),
-        }
+        },
       );
     } catch (error) {
       console.error("Error updating quantity:", error);
@@ -124,7 +153,7 @@ export default function CartPage(props) {
       // Call API
       await updateQuantityAPI(
         updatedCart[index]._id,
-        updatedCart[index].quantity
+        updatedCart[index].quantity,
       );
     }
   };
@@ -141,7 +170,7 @@ export default function CartPage(props) {
       // Call API
       await updateQuantityAPI(
         updatedCart[index]._id,
-        updatedCart[index].quantity
+        updatedCart[index].quantity,
       );
     }
   };
@@ -153,7 +182,7 @@ export default function CartPage(props) {
 
     const grandTotal = withTotals.reduce(
       (acc, item) => acc + item.totalPrice,
-      0
+      0,
     );
     setOrderTotal(grandTotal);
   };
@@ -180,14 +209,14 @@ export default function CartPage(props) {
     try {
       setLoading(true);
       const response = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/address/${loginData?.body?._id}`,
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/users/address/${loginData?.body?._id}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ address: tempAddress }),
-        }
+        },
       );
       const res = await response.json();
       if (res.success) {
@@ -215,7 +244,7 @@ export default function CartPage(props) {
         item?.product?.company.toString() !== previousCompany.toString()
       ) {
         return messageApi.error(
-          "Unauthorized Transaction. Items must be from the same company"
+          "Unauthorized Transaction. Items must be from the same company",
         );
       }
     }
@@ -224,12 +253,12 @@ export default function CartPage(props) {
       try {
         // 1. Create Payment Intent (backend)
         const intentRes = await fetch(
-          "https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/create-payment-intent",
+          "https://eyefit-shop-047b26dc31ed.herokuapp.com/api/user/create-payment-intent",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ amount: orderTotal * 100 }), // convert pesos → centavos
-          }
+          },
         );
         intentData = await intentRes.json();
         const intentId = intentData.body?.data?.id;
@@ -257,7 +286,7 @@ export default function CartPage(props) {
                 },
               },
             }),
-          }
+          },
         );
         const pmData = await pmRes.json();
         const paymentMethodId = pmData?.data?.id;
@@ -279,7 +308,7 @@ export default function CartPage(props) {
                 },
               },
             }),
-          }
+          },
         );
 
         const finalData = await attachRes.json();
@@ -321,6 +350,19 @@ export default function CartPage(props) {
         const checkoutUrl =
           sourceData?.data?.attributes?.redirect?.checkout_url;
 
+        await emailjs?.send(
+          "service_op50nlb",
+          "template_j3pyijr",
+          {
+            email: loginData?.body?.email,
+            customer_name: loginData?.body?.name,
+            reference_number: generateGCashRef(16),
+            amount: orderTotal,
+            payment_date: formatNow(),
+          },
+          "0KZOtJzWLcgZhpic4",
+        );
+
         if (checkoutUrl) {
           window.location.href = checkoutUrl; // redirect to e-wallet page
           return;
@@ -355,14 +397,14 @@ export default function CartPage(props) {
       }
       console.log(intentData?.body?.data);
       const response = await fetch(
-        "https://eyefit-shop-800355ab3f46.herokuapp.com/api/orders",
+        "https://eyefit-shop-047b26dc31ed.herokuapp.com/api/orders",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
       const res = await response.json();
 
@@ -370,7 +412,7 @@ export default function CartPage(props) {
         handleRemoveAllItem(false);
         messageApi.success("Order Placed Successfully!");
         cartData();
-        setPaymentMethod("otc");
+        setPaymentMethod("cod");
 
         setIsModalOpen(false);
       } else {
@@ -384,10 +426,10 @@ export default function CartPage(props) {
   const handleRemoveItem = async (checkoutId) => {
     try {
       const data = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/remove/checkout?checkoutId=${checkoutId}`,
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/user/remove/checkout?checkoutId=${checkoutId}`,
         {
           method: "DELETE",
-        }
+        },
       );
 
       const res = await data.json();
@@ -405,10 +447,10 @@ export default function CartPage(props) {
 
   const handleRemoveAllItem = async (toShow) => {
     const data = await fetch(
-      `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/remove/all/checkout?userId=${loginData?.body?._id}`,
+      `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/user/remove/all/checkout?userId=${loginData?.body?._id}`,
       {
         method: "DELETE",
-      }
+      },
     );
 
     const res = await data.json();
@@ -578,7 +620,7 @@ export default function CartPage(props) {
                   Total: ₱
                   {cartItems.reduce(
                     (acc, item) => acc + item.product.price * item.quantity,
-                    0
+                    0,
                   )}
                 </span>
 
@@ -647,16 +689,16 @@ export default function CartPage(props) {
                 {(() => {
                   const allImages =
                     selectedProduct?.product?.variants?.flatMap(
-                      (v) => v.images
+                      (v) => v.images,
                     ) || [];
 
                   const prevImage = () =>
                     setCurrentIndex((prev) =>
-                      prev === 0 ? allImages.length - 1 : prev - 1
+                      prev === 0 ? allImages.length - 1 : prev - 1,
                     );
                   const nextImage = () =>
                     setCurrentIndex((prev) =>
-                      prev === allImages.length - 1 ? 0 : prev + 1
+                      prev === allImages.length - 1 ? 0 : prev + 1,
                     );
 
                   return (
@@ -808,7 +850,7 @@ export default function CartPage(props) {
                               </p>
                               <p className="text-xs text-gray-500">
                                 {new Date(
-                                  review.createdAt
+                                  review.createdAt,
                                 ).toLocaleDateString()}
                               </p>
                             </div>
@@ -991,7 +1033,6 @@ export default function CartPage(props) {
                   onChange={handleRadioChange}
                   className="flex flex-col w-full gap-2"
                 >
-                  <Radio value="otc">Over the counter</Radio>
                   <Radio value="cod">Cash on Delivery</Radio>
                   <Radio value="card">Credit / Debit Card</Radio>
                   <Radio value="gcash">GCash</Radio>

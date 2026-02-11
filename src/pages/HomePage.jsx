@@ -33,7 +33,7 @@ export default function HomePage(props) {
   const fetchData = async () => {
     try {
       const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/product`
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/user/product`,
       );
       const json = await res.json();
       console.log(json);
@@ -46,7 +46,7 @@ export default function HomePage(props) {
   const fetchRecommendedData = async () => {
     try {
       const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/recommended-product?q=${location.state?.faceShape}`
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/user/recommended-product?q=${location.state?.faceShape}`,
       );
       const json = await res.json();
       console.log(json);
@@ -62,9 +62,9 @@ export default function HomePage(props) {
       const fetchSearchData = async () => {
         try {
           const res = await fetch(
-            `https://eyefit-shop-800355ab3f46.herokuapp.com/api/product/search?q=${searchTerm}`
+            `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/product/search?q=${searchTerm}`,
           );
-          // const res = await fetch(`https://eyefit-shop-800355ab3f46.herokuapp.com/api/product/search?q=${searchTerm}`);
+          // const res = await fetch(`https://eyefit-shop-047b26dc31ed.herokuapp.com/api/product/search?q=${searchTerm}`);
           const json = await res.json();
           setProducts(json.body || []); // assuming your API responds with { body: [...] }
         } catch (error) {
@@ -91,15 +91,15 @@ export default function HomePage(props) {
     };
 
     const response = await fetch(
-      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/like",
+      "https://eyefit-shop-047b26dc31ed.herokuapp.com/api/users/like",
       {
-        // const response = await fetch("https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/like", {
+        // const response = await fetch("https://eyefit-shop-047b26dc31ed.herokuapp.com/api/users/like", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-      }
+      },
     );
     const res = await response.json();
 
@@ -118,15 +118,15 @@ export default function HomePage(props) {
     };
 
     const response = await fetch(
-      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/view",
+      "https://eyefit-shop-047b26dc31ed.herokuapp.com/api/users/view",
       {
-        // const response = await fetch("https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/view", {
+        // const response = await fetch("https://eyefit-shop-047b26dc31ed.herokuapp.com/api/users/view", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-      }
+      },
     );
     const res = await response.json();
 
@@ -149,15 +149,15 @@ export default function HomePage(props) {
     }
 
     const response = await fetch(
-      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/checkout",
+      "https://eyefit-shop-047b26dc31ed.herokuapp.com/api/user/checkout",
       {
-        // const response = await fetch("https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/checkout", {
+        // const response = await fetch("https://eyefit-shop-047b26dc31ed.herokuapp.com/api/user/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-      }
+      },
     );
     const res = await response.json();
 
@@ -189,18 +189,13 @@ export default function HomePage(props) {
 
       {/* Logo + Search */}
       <div className="flex flex-col items-center py-6 bg-white shadow-sm">
-        <img
-          src="/icon.png"
-          alt="EYEFIT logo"
-          className="w-28 md:w-36 h-auto mb-4"
-        />
         <div className="flex items-center justify-between w-full max-w-2xl gap-3 px-4">
           {/* Search Icon/Input */}
           <div ref={containerRef} className="flex-1">
             {!showInput ? (
               <button
                 onClick={() => setShowInput(true)}
-                className="p-2 rounded-full shadow hover:bg-gray-100 transition w-10 h-10 flex items-center justify-center"
+                className="p-2 rounded-full shadow hover:bg-gray-100 transition w-11 h-11 flex items-center justify-center shadow-md"
               >
                 <SearchOutlined style={{ fontSize: "20px" }} />
               </button>
@@ -218,18 +213,35 @@ export default function HomePage(props) {
           {/* Book Appointment Button */}
           <button
             onClick={() => history("/cart")}
-            className="relative bg-green-600 hover:bg-green-700 text-white text-sm md:text-base font-semibold py-2 px-4 rounded-lg shadow transition"
+            className="relative flex items-center justify-center 
+             w-11 h-11 md:w-12 md:h-12
+             bg-green-600 hover:bg-green-700 
+             text-white rounded-full shadow-lg 
+             transition focus:outline-none"
           >
             {/* Badge Count */}
             {cartItems.length > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
+              <span
+                className="absolute -top-1 -right-1 
+                 bg-red-500 text-white 
+                 text-[10px] font-bold 
+                 min-w-[18px] h-[18px] 
+                 flex items-center justify-center 
+                 rounded-full px-1"
+              >
                 {cartItems.length}
               </span>
             )}
-            <ShoppingCartOutlined className="text-lg mr-1" />
-            Cart
+
+            <ShoppingCartOutlined className="text-xl md:text-2xl" />
           </button>
         </div>
+
+        <img
+          src="/icon.png"
+          alt="EYEFIT logo"
+          className="w-28 md:w-36 h-auto mb-4"
+        />
       </div>
 
       {/* Featured Products */}
@@ -669,11 +681,11 @@ export default function HomePage(props) {
 
                   const prevImage = () =>
                     setCurrentIndex((prev) =>
-                      prev === 0 ? allImages.length - 1 : prev - 1
+                      prev === 0 ? allImages.length - 1 : prev - 1,
                     );
                   const nextImage = () =>
                     setCurrentIndex((prev) =>
-                      prev === allImages.length - 1 ? 0 : prev + 1
+                      prev === allImages.length - 1 ? 0 : prev + 1,
                     );
 
                   return (
@@ -822,7 +834,7 @@ export default function HomePage(props) {
                               </p>
                               <p className="text-xs text-gray-500">
                                 {new Date(
-                                  review.createdAt
+                                  review.createdAt,
                                 ).toLocaleDateString()}
                               </p>
                             </div>

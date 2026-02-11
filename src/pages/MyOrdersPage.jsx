@@ -51,12 +51,12 @@ function ReviewForm({ itemId, userId, onReviewAdded, onClose, fetchData }) {
 
     try {
       const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/${itemId}/review`,
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/user/${itemId}/review`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       // Check if response is okay
@@ -145,7 +145,7 @@ export default function MyOrdersPage() {
   const fetchData = async () => {
     try {
       const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/orders?userId=${loginData?.body?._id}`
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/users/orders?userId=${loginData?.body?._id}`,
       );
       const json = await res.json();
       setData(json.body || []); // assuming your API responds with { body: [...] }
@@ -162,14 +162,14 @@ export default function MyOrdersPage() {
 
     try {
       const response = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/orders/status/${id}`,
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/orders/status/${id}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ status }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -187,7 +187,7 @@ export default function MyOrdersPage() {
   // 📊 Filters
   const toPay = data.filter(
     (item) =>
-      item.status === "Pending" && item.paymentMethod === "Over the counter"
+      item.status === "Pending" && item.paymentMethod === "Over the counter",
   );
   const toShip = data.filter(
     (item) =>
@@ -195,14 +195,14 @@ export default function MyOrdersPage() {
         (item.paymentMethod === "Cash on Delivery" ||
           item.paymentMethod === "Debit/Credit Card" ||
           item.paymentMethod === "Gcash")) ||
-      item.status === "Processing"
+      item.status === "Processing",
   );
   const shipped = data.filter((item) => item.status === "Shipped");
   const review = data.filter(
-    (item) => item.status === "Completed" && !item.ratingStatus
+    (item) => item.status === "Completed" && !item.ratingStatus,
   );
   const completed = data.filter(
-    (item) => item.status === "Completed" && item.ratingStatus
+    (item) => item.status === "Completed" && item.ratingStatus,
   );
   const cancelled = data.filter((item) => item.status === "Cancelled");
 
@@ -242,10 +242,10 @@ export default function MyOrdersPage() {
               order.status === "Completed"
                 ? "green"
                 : order.status === "Pending"
-                ? "orange"
-                : order.status === "Cancelled"
-                ? "red"
-                : "orange"
+                  ? "orange"
+                  : order.status === "Cancelled"
+                    ? "red"
+                    : "orange"
             }
             className="text-sm font-semibold rounded-md px-3 py-1"
           >

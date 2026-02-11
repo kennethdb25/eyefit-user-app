@@ -13,28 +13,40 @@ export default function Register() {
   const history = useNavigate();
 
   const handleSubmit = async (values) => {
+    const requestBody = {
+      address: values.address,
+      confirmPassword: values.confirmPassword,
+      contact: values.contact,
+      email: values.email,
+      gender: values.gender,
+      name: `${values.firstName}${values.middleName ? ` ${values.middleName}` : ""} ${values.lastName}`,
+      password: values.password,
+    };
+
+    console.log(requestBody);
     if (values.password !== values.confirmPassword) {
       return alert("Passwords do not match!");
     }
     setLoading(true);
     //
     const response = await fetch(
-      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users",
+      "https://eyefit-shop-047b26dc31ed.herokuapp.com/api/users",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(values),
-      }
+        body: JSON.stringify(requestBody),
+      },
     );
     const res = await response.json();
+    console.log(res);
 
     if (res.success) {
       messageApi.success("Account Created Successfully! Go to Login Page");
       form.resetFields();
+      // check set Timeout - it should redirect to home/login page
       setTimeout(() => {
-        window.location.reload();
         history("/");
       }, 1000);
     } else {
@@ -59,14 +71,38 @@ export default function Register() {
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           {/* Full Name */}
           <Form.Item
-            label="Full Name"
-            name="name"
+            label="First Name"
+            name="firstName"
             rules={[
-              { required: true, message: "Please enter the full name" },
-              { max: 40, message: "Name can not exceed 40 characters" },
+              { required: true, message: "Please enter the first name" },
+              { max: 40, message: "First Name can not exceed 40 characters" },
             ]}
           >
-            <Input placeholder="Jane Smith" />
+            <Input />
+          </Form.Item>
+
+          {/* Full Name */}
+          <Form.Item
+            label="Middle Name"
+            name="middleName"
+            rules={[
+              { required: false, message: "Please enter the middle name" },
+              { max: 40, message: "Middle Name can not exceed 40 characters" },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+
+          {/* Last Name */}
+          <Form.Item
+            label="Last Name"
+            name="lastName"
+            rules={[
+              { required: true, message: "Please enter the last name" },
+              { max: 40, message: "Last Name can not exceed 40 characters" },
+            ]}
+          >
+            <Input />
           </Form.Item>
 
           {/* Email */}
@@ -78,7 +114,7 @@ export default function Register() {
               { max: 40, message: "Model can not exceed 40 characters" },
             ]}
           >
-            <Input placeholder="jane@example.com" />
+            <Input placeholder="lorem@example.com" />
           </Form.Item>
 
           {/* Address */}

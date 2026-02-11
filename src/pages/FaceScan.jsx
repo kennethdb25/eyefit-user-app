@@ -7,13 +7,6 @@ import {
 } from "@snap/camera-kit";
 import { useLocation } from "react-router-dom";
 
-const LENSES = [
-  {
-    id: "e094eba6-1eff-4cad-824c-82dcd804168b", // Replace with real Lens ID
-    groupId: "849f744e-8f7c-45dd-9d08-4e5afc08ce2d", // Replace with real Group ID
-  },
-];
-
 export default function FaceScan() {
   const containerRef = useRef(null); // Parent div to append canvas
   const sessionRef = useRef(null);
@@ -27,6 +20,7 @@ export default function FaceScan() {
     let canvas;
 
     (async function initAR() {
+      console.log(location);
       try {
         const cameraKit = await bootstrapCameraKit({
           apiToken:
@@ -37,20 +31,20 @@ export default function FaceScan() {
         canvas = document.createElement("canvas");
         canvas.style.width = "100%";
         canvas.style.height = "100%";
-        containerRef.current?.appendChild(canvas);
+        containerRef?.current?.appendChild(canvas);
 
-        const session = await cameraKit.createSession({
+        const session = await cameraKit?.createSession({
           liveRenderTarget: canvas,
         });
         sessionRef.current = session;
 
-        session.events.addEventListener("error", (event) => {
+        session?.events?.addEventListener("error", (event) => {
           if (event.detail.error.name === "LensExecutionError") {
-            console.error("Lens crashed:", event.detail.error);
+            console.error("Lens crashed:", event?.detail?.error);
           }
         });
 
-        const stream = await navigator.mediaDevices.getUserMedia({
+        const stream = await navigator?.mediaDevices?.getUserMedia({
           video: { facingMode: "user" },
         });
         streamRef.current = stream;
@@ -62,9 +56,9 @@ export default function FaceScan() {
 
         await session.setSource(source);
 
-        const lens = await cameraKit.lensRepository.loadLens(
-          location.state?.id,
-          LENSES[0].groupId
+        const lens = await cameraKit?.lensRepository?.loadLens(
+          location?.state?.id,
+          "346e91f1-072e-4653-aaf3-54fc658c9d0d"
         );
         await session.applyLens(lens);
 

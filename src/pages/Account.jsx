@@ -20,11 +20,26 @@ import {
   LogoutOutlined,
   LeftOutlined,
   CameraOutlined,
+  FilterOutlined,
 } from "@ant-design/icons";
-import { Modal, message, Popconfirm, Form, Input, Button } from "antd";
+import {
+  Modal,
+  message,
+  Popconfirm,
+  Form,
+  Input,
+  Button,
+  Dropdown,
+  Menu,
+} from "antd";
 import { LoginContext } from "../context/LoginContext";
 import { ToastContainer, toast, Bounce } from "react-toastify";
 import { motion } from "framer-motion";
+
+function truncate(text, maxLength = 20) {
+  if (!text) return "";
+  return text.length > maxLength ? text.slice(0, maxLength) + "..." : text;
+}
 
 const AccountInformationModal = ({ open, onClose, user }) => {
   const [openChangePass, setOpenChangePass] = useState(false);
@@ -81,7 +96,7 @@ const AccountInformationModal = ({ open, onClose, user }) => {
             <div className="flex justify-between items-center border-b pb-3">
               <span className="text-gray-700">Address</span>
               <span className="text-gray-700">
-                {user?.address || "email@example.com"}
+                {truncate(user?.address) || "email@example.com"}
               </span>
             </div>
 
@@ -111,13 +126,6 @@ const AccountInformationModal = ({ open, onClose, user }) => {
   );
 };
 
-const InfoItem = ({ label, value }) => (
-  <div className="flex justify-between items-center border-b pb-3">
-    <span className="text-gray-700">{label}</span>
-    <span className="text-gray-900">{value || "---"}</span>
-  </div>
-);
-
 const ChangePasswordModal = ({ open, onClose, userId }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -141,7 +149,7 @@ const ChangePasswordModal = ({ open, onClose, userId }) => {
 
     try {
       const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/user/forgot-password/${loginData?.body?._id}`,
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/user/forgot-password/${loginData?.body?._id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -150,7 +158,7 @@ const ChangePasswordModal = ({ open, onClose, userId }) => {
             newPassword: values.newPassword,
             confirmPassword: values.confirmPassword,
           }),
-        }
+        },
       );
 
       const data = await res.json();
@@ -305,6 +313,7 @@ const Account = (props) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [appointments, setAppointments] = useState([]);
+  const [filterStatus, setFilterStatus] = useState("All");
   const history = useNavigate();
   const { setData } = props;
 
@@ -330,10 +339,28 @@ const Account = (props) => {
     ),
   };
 
+  const filterMenu = (
+    <Menu
+      selectedKeys={[filterStatus]} // highlight the selected filter
+      items={[
+        { key: "All", label: "All" },
+        { key: "Accepted", label: "Accepted" },
+        { key: "Pending", label: "Pending" },
+        { key: "Rejected", label: "Rejected" },
+        { key: "Cancelled", label: "Cancelled" },
+      ]}
+      onClick={({ key }) => setFilterStatus(key)}
+    />
+  );
+
+  const filteredAppointments = appointments.filter((appt) =>
+    filterStatus === "All" ? true : appt.status === filterStatus,
+  );
+
   const fetchAppointmentData = async () => {
     try {
       const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/appointments?email=${loginData?.body?.email}`
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/users/appointments?email=${loginData?.body?.email}`,
       );
       const json = await res.json();
       setAppointments(json.body || []);
@@ -358,14 +385,14 @@ const Account = (props) => {
 
     try {
       const response = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointments/status/${id}`,
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/appointments/status/${id}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ status }),
-        }
+        },
       );
 
       const data = await response.json();
@@ -385,7 +412,7 @@ const Account = (props) => {
     console.log("Logout clicked");
     let token = localStorage.getItem("accountUserToken");
     const res = await fetch(
-      "https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/logout",
+      "https://eyefit-shop-047b26dc31ed.herokuapp.com/api/users/logout",
       {
         method: "GET",
         headers: {
@@ -393,7 +420,7 @@ const Account = (props) => {
           Authorization: token,
           Accept: "application/json",
         },
-      }
+      },
     );
 
     const data = await res.json();
@@ -446,8 +473,8 @@ const Account = (props) => {
             appt.status === "Pending"
               ? "bg-yellow-100 text-yellow-700"
               : appt.status === "Accepted"
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
           }`}
         >
           {appt.status}
@@ -489,7 +516,7 @@ const Account = (props) => {
   const fetchData = async () => {
     try {
       const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/orders?userId=${loginData?.body?._id}`
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/users/orders?userId=${loginData?.body?._id}`,
       );
       const json = await res.json();
       setOrderData(json.body || []);
@@ -501,7 +528,7 @@ const Account = (props) => {
   const fetchLikeData = async () => {
     try {
       const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/like?userId=${loginData?.body?._id}`
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/users/like?userId=${loginData?.body?._id}`,
       );
       const json = await res.json();
       setLikeData(json.body || []);
@@ -514,7 +541,7 @@ const Account = (props) => {
     try {
       //
       const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/users/view?userId=${loginData?.body?._id}`
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/users/view?userId=${loginData?.body?._id}`,
       );
       const json = await res.json();
       setRecentlyViewData(json.body || []);
@@ -522,24 +549,24 @@ const Account = (props) => {
       console.error("Fetch failed:", error);
     }
   };
-
   const toPayCount = orderData.filter(
     (item) =>
-      item.status === "Pending" && item.paymentMethod === "Over the counter"
+      item.status === "Pending" && item.paymentMethod === "Over the counter",
   );
   const toShipCount = orderData.filter(
     (item) =>
       (item.status === "Pending" &&
         (item.paymentMethod === "Cash on Delivery" ||
-          item.paymentMethod === "Debit/Credit Card")) ||
-      item.status === "Processing"
+          item.paymentMethod === "Debit/Credit Card" ||
+          item.paymentMethod === "Gcash")) ||
+      item.status === "Processing",
   );
   const shippedCount = orderData.filter((item) => item.status === "Shipped");
   const reviewCount = orderData.filter(
-    (item) => item.status === "Completed" && !item.ratingStatus
+    (item) => item.status === "Completed" && !item.ratingStatus,
   );
   const cancelledCount = orderData.filter(
-    (item) => item.status === "Cancelled"
+    (item) => item.status === "Cancelled",
   );
 
   useEffect(() => {
@@ -590,9 +617,9 @@ const Account = (props) => {
           <Link to="/my-orders?tab=2" className="flex flex-col items-center">
             <div className="mb-1 relative">
               <GiftOutlined className="text-lg text-green-600" />
-              {toShipCount.length > 0 && (
+              {toShipCount?.length > 0 && (
                 <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs font-bold w-4 h-4 flex items-center justify-center rounded-full">
-                  {toShipCount.length}
+                  {toShipCount?.length}
                 </span>
               )}
             </div>
@@ -802,7 +829,36 @@ const Account = (props) => {
         centered
         style={{ maxHeight: "70vh", overflowY: "auto" }}
       >
-        <div className="space-y-3">{appointments.map(renderCard)}</div>
+        {/* Filter Dropdown */}
+        <div className="flex justify-end mb-3">
+          <Dropdown
+            overlay={filterMenu}
+            placement="bottomRight"
+            trigger={["click"]}
+          >
+            <Button icon={<FilterOutlined />} type="primary">
+              {filterStatus}
+            </Button>
+          </Dropdown>
+        </div>
+
+        {/* Cards or Empty State */}
+        <div className="space-y-3">
+          {filteredAppointments.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed rounded-xl bg-gray-50 text-gray-500 animate-fadeIn">
+              <span className="text-5xl mb-3">📭</span>
+              <h3 className="text-lg font-semibold text-gray-600">
+                No appointment record
+              </h3>
+              <p className="text-sm text-gray-400">
+                No appointments found under{" "}
+                <span className="font-medium">{filterStatus}</span>
+              </p>
+            </div>
+          ) : (
+            filteredAppointments.map(renderCard)
+          )}
+        </div>
       </Modal>
 
       {/* Settings Modal */}

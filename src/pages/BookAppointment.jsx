@@ -9,6 +9,7 @@ import {
   Select,
   Typography,
   message,
+  Radio,
 } from "antd";
 import { LeftOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -46,6 +47,7 @@ export default function BookAppointment() {
   const [selectedTime, setSelectedTime] = useState(null);
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [config, setConfig] = useState(null);
+  const [appointmentFor, setAppointmentFor] = useState("");
 
   const [disabled, setDisabled] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -99,11 +101,62 @@ export default function BookAppointment() {
     address: loginData?.body?.address,
   };
 
+  function splitFullName(fullName = "") {
+    const parts = fullName.trim().split(/\s+/);
+
+    if (parts.length === 1) {
+      return { firstName: parts[0], middleName: "", lastName: "" };
+    }
+
+    if (parts.length === 2) {
+      return { firstName: parts[0], middleName: "", lastName: parts[1] };
+    }
+
+    return {
+      firstName: parts[0],
+      middleName: parts.slice(1, -1).join(" "),
+      lastName: parts[parts.length - 1],
+    };
+  }
+
+  const nameParts = splitFullName(currentUser?.name);
+
+  const handleAppointmentForChange = (e) => {
+    const value = e.target.value;
+    setAppointmentFor(value);
+
+    if (value === "self") {
+      // Auto-fill from login
+      form.setFieldsValue({
+        firstName: nameParts.firstName,
+        middleName: nameParts.middleName,
+        lastName: nameParts.lastName,
+        gender: currentUser?.gender || "",
+        phone: currentUser?.phone || "",
+        address: currentUser?.address || "",
+        email: currentUser?.email || "",
+      });
+    } else {
+      // Clear all except email
+      form.setFieldsValue({
+        firstName: "",
+        middleName: "",
+        lastName: "",
+        gender: "",
+        phone: "",
+        address: "",
+        description: "",
+      });
+    }
+
+    setTimeout(() => checkFormValidity(), 0);
+  };
+
   // Fetch business appointment config
   const fetchConfig = async (company) => {
     try {
       const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointment-config/${company}`
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/appointment-config/${company}`,
       );
       const data = await res.json();
       setConfig(data.success ? data.body : null);
@@ -117,7 +170,7 @@ export default function BookAppointment() {
   const fetchStoreData = async () => {
     try {
       const res = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/available/business`
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/available/business`,
       );
       const json = await res.json();
       setStoreData(json.body || []);
@@ -131,7 +184,7 @@ export default function BookAppointment() {
     if (!company) return;
     try {
       const data = await fetch(
-        `https://eyefit-shop-800355ab3f46.herokuapp.com/api/validate/appointment?company=${company}`
+        `https://eyefit-shop-047b26dc31ed.herokuapp.com/api/validate/appointment?company=${company}`,
       );
       const res = await data.json();
 
@@ -161,7 +214,7 @@ export default function BookAppointment() {
     const slots = [];
     let current = dayjs(start, "HH:mm");
     const endTime = dayjs(end, "HH:mm");
-    while (current.isBefore(endTime) || current.isSame(endTime)) {
+    while (current.isBefore(endTime)) {
       slots.push(current.format("hh:mmA"));
       current = current.add(interval, "minute");
     }
@@ -181,7 +234,7 @@ export default function BookAppointment() {
 
     const isPast = current.isBefore(dayjs(), "day");
     const isUnavailable = config.exceptions?.includes(
-      current.format("YYYY-MM-DD")
+      current.format("YYYY-MM-DD"),
     );
     const isWorkingDay = config.workingDays.includes(current.day());
 
@@ -199,17 +252,18 @@ export default function BookAppointment() {
 
     try {
       const response = await fetch(
-        "https://eyefit-shop-800355ab3f46.herokuapp.com/api/appointments/add",
+        "https://eyefit-shop-047b26dc31ed.herokuapp.com/api/appointments/add",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(values),
-        }
+        },
       );
       const res = await response.json();
       if (res.success) {
         messageApi.success("Appointment Requested!");
         form.resetFields();
+        history("/account");
       } else {
         messageApi.error(res?.error || "Something went wrong");
       }
@@ -244,9 +298,6 @@ export default function BookAppointment() {
             form={form}
             onFinish={onFinish}
             onValuesChange={onValuesChange}
-            initialValues={{
-              email: currentUser?.email,
-            }}
             className="space-y-4"
           >
             {/* Store */}
@@ -305,7 +356,7 @@ export default function BookAppointment() {
                   }
 
                   const isWorkingDay = config?.workingDays?.includes(
-                    current.day()
+                    current.day(),
                   );
                   const isFuture = current.isSameOrAfter(dayjs(), "day");
 
@@ -313,10 +364,10 @@ export default function BookAppointment() {
                     const bookedForDay = bookedSlots[formatted] || [];
                     const totalSlots = generateTimeSlots(
                       config.workingHours.start,
-                      config.workingHours.end
+                      config.workingHours.end,
                     );
                     const availableSlots = totalSlots.filter(
-                      (slot) => !bookedForDay.includes(slot)
+                      (slot) => !bookedForDay.includes(slot),
                     );
 
                     if (availableSlots.length > 0) {
@@ -389,6 +440,16 @@ export default function BookAppointment() {
               <h3 className="text-center font-semibold mb-3">
                 Personal Information
               </h3>
+              <Form.Item className="mb-2">
+                <Radio.Group
+                  onChange={handleAppointmentForChange}
+                  value={appointmentFor}
+                  className="flex justify-center gap-6"
+                >
+                  <Radio value="self">For Myself</Radio>
+                  <Radio value="other">For Someone Else</Radio>
+                </Radio.Group>
+              </Form.Item>
               <Form.Item
                 label="First Name"
                 name="firstName"

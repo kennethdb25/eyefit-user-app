@@ -87,7 +87,7 @@ export default function Login(props) {
               { type: "email", message: "Invalid email format" },
             ]}
           >
-            <Input placeholder="Enter Email" />
+            <Input placeholder="Email" />
           </Form.Item>
 
           {/* Password */}
@@ -96,7 +96,7 @@ export default function Login(props) {
             name="password"
             rules={[{ required: true, message: "Please enter your password" }]}
           >
-            <Input.Password placeholder="Enter Password" />
+            <Input.Password placeholder="Password" />
           </Form.Item>
 
           {/* Submit Button */}

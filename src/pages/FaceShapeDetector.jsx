@@ -10,33 +10,75 @@ function distance(a, b) {
   const dy = a.y - b.y;
   return Math.hypot(dx, dy);
 }
+function getMidpoint(p1, p2) {
+  return {
+    x: (p1.x + p2.x) / 2,
+    y: (p1.y + p2.y) / 2,
+  };
+}
 
 function classifyFaceShape(jawPoints, landmarks) {
-  // Simple heuristics using 68-point landmarks
-  const p0 = jawPoints[0],
-    p3 = jawPoints[3],
-    p8 = jawPoints[8],
-    p13 = jawPoints[13],
-    p16 = jawPoints[16];
+  const p0 = jawPoints[0];
+  const p3 = jawPoints[3];
+  const p8 = jawPoints[8];
+  const p13 = jawPoints[13];
+  const p16 = jawPoints[16];
+
   const jawWidth = distance(p0, p16);
   const cheekWidth = distance(p3, p13);
-  const faceLength =
-    distance(landmarks.getNose()[0], p8) ||
-    distance(landmarks.getNose()[6], p8) ||
-    distance(landmarks.getNose()[3], p8);
+
+  // ✅ Use eyebrow midpoint instead of nose
+  const leftBrow = landmarks.getLeftEyeBrow();
+  const rightBrow = landmarks.getRightEyeBrow();
+  const browMid = getMidpoint(leftBrow[2], rightBrow[2]);
+
+  const faceLength = distance(browMid, p8);
 
   const ratioJawCheek = jawWidth / cheekWidth;
+  const cheekToJaw = cheekWidth / jawWidth;
   const lengthRatio = faceLength / jawWidth;
 
-  // Heuristic thresholds (tweak as needed)
-  if (Math.abs(jawWidth - cheekWidth) / cheekWidth < 0.08 && lengthRatio < 1.05)
+  console.log("RATIOS:", {
+    ratioJawCheek,
+    cheekToJaw,
+    lengthRatio,
+  });
+
+  // ✅ More realistic ranges
+
+  // Square
+  if (
+    lengthRatio >= 0.95 &&
+    lengthRatio <= 1.15 &&
+    Math.abs(ratioJawCheek - 1) <= 0.15
+  ) {
     return "Square";
-  if (lengthRatio > 1.2 && ratioJawCheek < 0.95) return "Oval";
-  if (lengthRatio < 0.95 && Math.abs(jawWidth - cheekWidth) / cheekWidth < 0.12)
+  }
+
+  // Oval
+  if (
+    lengthRatio > 1.15 &&
+    lengthRatio <= 1.45 &&
+    ratioJawCheek >= 0.9 &&
+    ratioJawCheek <= 1.05
+  ) {
+    return "Oval";
+  }
+
+  // Round
+  if (lengthRatio < 1.0 && Math.abs(ratioJawCheek - 1) <= 0.2) {
     return "Round";
-  // narrow jaw + wider cheek area
-  if (cheekWidth / jawWidth > 1.12 && lengthRatio > 1.02) return "Diamond";
-  if (cheekWidth / jawWidth > 1.05 && lengthRatio <= 1.02) return "Heart";
+  }
+
+  // Diamond
+  if (cheekToJaw > 1.15 && lengthRatio > 1.1) {
+    return "Diamond";
+  }
+
+  // Heart
+  if (cheekToJaw > 1.1 && lengthRatio <= 1.1) {
+    return "Heart";
+  }
 
   return "Unknown";
 }

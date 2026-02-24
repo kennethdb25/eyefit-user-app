@@ -21,6 +21,9 @@ export default function FaceScan() {
 
     (async function initAR() {
       console.log(location);
+      Object.defineProperty(navigator, "userAgent", {
+        get: () => "Chrome/120.0.0.0",
+      });
       try {
         const cameraKit = await bootstrapCameraKit({
           apiToken:

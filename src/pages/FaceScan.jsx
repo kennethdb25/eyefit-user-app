@@ -43,7 +43,7 @@ export default function FaceScan() {
             console.error("Lens crashed:", event?.detail?.error);
           }
         });
-
+        navigator?.mediaDevices.getUserMedia({ video: true });
         const stream = await navigator?.mediaDevices?.getUserMedia({
           video: { facingMode: "user" },
         });
@@ -58,7 +58,7 @@ export default function FaceScan() {
 
         const lens = await cameraKit?.lensRepository?.loadLens(
           location?.state?.id,
-          "346e91f1-072e-4653-aaf3-54fc658c9d0d"
+          "346e91f1-072e-4653-aaf3-54fc658c9d0d",
         );
         await session.applyLens(lens);
 

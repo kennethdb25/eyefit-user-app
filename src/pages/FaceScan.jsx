@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect, useRef, useState } from "react";
 import { bootstrapCameraKit, createMediaStreamSource } from "@snap/camera-kit";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 export default function FaceScan() {
   const containerRef = useRef(null);
@@ -10,7 +10,6 @@ export default function FaceScan() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const location = useLocation();
-  const history = useNavigate();
 
   useEffect(() => {
     let mounted = true;

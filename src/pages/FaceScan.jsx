@@ -5,7 +5,7 @@ import {
   createMediaStreamSource,
   Transform2D,
 } from "@snap/camera-kit";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function FaceScan() {
   const containerRef = useRef(null); // Parent div to append canvas
@@ -14,6 +14,7 @@ export default function FaceScan() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const location = useLocation(); // Detect route changes
+  const history = useNavigate();
 
   useEffect(() => {
     let mounted = true;
@@ -97,25 +98,49 @@ export default function FaceScan() {
   }, [location?.pathname]);
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-screen bg-green">
-      <h1 className="text-black text-lg md:text-2xl font-bold p-4">
-        Try On Eyeglasses
-      </h1>
+    <div className="relative flex flex-col items-center justify-center w-full h-screen bg-gradient-to-b from-green-200 to-green-400">
+      {/* Floating Header */}
+      <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 backdrop-blur-md bg-white/30 z-20">
+        <h1 className="text-black text-lg md:text-xl font-bold tracking-wide">
+          👓 Try On Eyeglasses
+        </h1>
+
+        <button
+          onClick={() => {
+            history("/home");
+            window.location.reload();
+          }}
+          className="px-4 py-2 bg-black text-white text-sm rounded-full shadow-md hover:bg-gray-800 transition"
+        >
+          ⬅ Exit
+        </button>
+      </div>
+
+      {/* Camera Container */}
       <div
         ref={containerRef}
-        className="relative w-full max-w-md aspect-[6/16] rounded-xl overflow-hidden shadow-lg border border-gray-700 bg-black"
+        className="relative w-full max-w-sm aspect-[6/16] rounded-2xl overflow-hidden shadow-2xl border border-gray-700 bg-black"
       >
         {(loading || error) && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70">
             {loading && !error && (
-              <p className="text-white text-sm">Loading AR...</p>
+              <>
+                <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin mb-3"></div>
+                <p className="text-white text-sm">Loading AR Camera...</p>
+              </>
             )}
+
             {error && (
-              <p className="text-red-400 text-sm text-center">{error}</p>
+              <p className="text-red-400 text-sm text-center px-4">{error}</p>
             )}
           </div>
         )}
       </div>
+
+      {/* Bottom Hint */}
+      <p className="text-xs text-gray-700 mt-4 opacity-70">
+        Position your face inside the frame
+      </p>
     </div>
   );
 }

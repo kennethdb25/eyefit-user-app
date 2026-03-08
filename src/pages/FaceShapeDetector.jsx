@@ -43,41 +43,29 @@ function classifyFaceShape(jawPoints, landmarks) {
     cheekToJaw,
     lengthRatio,
   });
-
-  // ✅ More realistic ranges
-
-  // Square
-  if (
-    lengthRatio >= 0.95 &&
-    lengthRatio <= 1.15 &&
-    Math.abs(ratioJawCheek - 1) <= 0.15
-  ) {
-    return "Square";
-  }
-
-  // Oval
-  if (
-    lengthRatio > 1.15 &&
-    lengthRatio <= 1.45 &&
-    ratioJawCheek >= 0.9 &&
-    ratioJawCheek <= 1.05
-  ) {
-    return "Oval";
-  }
-
-  // Round
-  if (lengthRatio < 1.0 && Math.abs(ratioJawCheek - 1) <= 0.2) {
-    return "Round";
-  }
-
-  // Diamond
-  if (cheekToJaw > 1.15 && lengthRatio > 1.1) {
+  // 1️⃣ Diamond (cheekbones widest)
+  if (cheekToJaw > 1.18 && lengthRatio > 1.15) {
     return "Diamond";
   }
 
-  // Heart
-  if (cheekToJaw > 1.1 && lengthRatio <= 1.1) {
+  // 2️⃣ Heart (wide cheek + shorter chin)
+  if (cheekToJaw > 1.12 && lengthRatio <= 1.15) {
     return "Heart";
+  }
+
+  // 3️⃣ Oval (face longer than wide)
+  if (lengthRatio >= 1.2 && ratioJawCheek >= 0.9 && ratioJawCheek <= 1.05) {
+    return "Oval";
+  }
+
+  // 4️⃣ Round (short face + soft jaw)
+  if (lengthRatio < 1.0 && ratioJawCheek >= 0.95 && ratioJawCheek <= 1.05) {
+    return "Round";
+  }
+
+  // 5️⃣ Square (similar width but stronger jaw)
+  if (lengthRatio >= 1.0 && lengthRatio <= 1.15 && ratioJawCheek > 1.05) {
+    return "Square";
   }
 
   return "Unknown";
